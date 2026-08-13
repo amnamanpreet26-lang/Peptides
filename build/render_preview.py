@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """Render the generated Elementor JSON to a static HTML preview.
 
-This is a verification tool, not part of the deliverable. It re-implements the
-subset of Elementor's layout CSS that the template uses so the result can be
+Verification tool, not part of the deliverable. It re-implements the subset of
+Elementor's Flexbox Container CSS that the template uses so the result can be
 screenshotted and compared against the reference design.
+
+Two blocks are stand-ins, drawn with a corner label, because their real content
+comes from a plugin at runtime:
+  * the Slider Revolution shortcode (the hero)
+  * the WooCommerce Products widget (the two product rows)
 """
 
 import html
@@ -11,41 +16,44 @@ import json
 import os
 import sys
 
-GAPS = {"no": 0, "narrow": 5, "extended": 7.5, "wide": 10, "wider": 15,
-        "default": 10, "": 10}
+import svg_assets as A
 
-# Rough stand-ins for the Font Awesome glyphs used by the template.
+# Outline icon stand-ins for the Font Awesome *Regular* set the template uses.
 ICONS = {
-    "fas fa-flask": "M9 3h6v2h-1v4.2l4.6 8.1A2 2 0 0 1 16.9 20H7.1a2 2 0 0 1-1.7-2.7L10 9.2V5H9V3z",
-    "fas fa-vial": "M7 2h6v2h-1v13a3 3 0 1 1-6 0V4H5V2h2zm1 2v13a1 1 0 1 0 2 0V4H8z",
-    "fas fa-vials": "M4 2h6v2H9v13a2 2 0 1 1-4 0V4H4V2zm10 0h6v2h-1v13a2 2 0 1 1-4 0V4h-1V2z",
-    "fas fa-shield-alt": "M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5l8-3zm-1 12l6-6-1.4-1.4L11 11.2 8.4 8.6 7 10l4 4z",
-    "fas fa-lock": "M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1zm2 0h6V7a3 3 0 0 0-6 0v3z",
-    "fas fa-truck": "M2 5h11v10H2V5zm12 3h4l3 4v3h-7V8zM6 20a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm11 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z",
-    "fas fa-shipping-fast": "M1 7h10v8H1V7zm11 2h4l3 4v2h-7V9zM6 19a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm10 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4zM0 9h4v1.5H0V9zm0 3h3v1.5H0V12z",
-    "fas fa-certificate": "M12 1l2.6 2.1 3.3-.4 1 3.2 2.9 1.7-1.5 3 1.5 3-2.9 1.7-1 3.2-3.3-.4L12 21l-2.6-2.1-3.3.4-1-3.2L2.2 14.4l1.5-3-1.5-3 2.9-1.7 1-3.2 3.3.4L12 1z",
-    "fas fa-shopping-cart": "M2 3h3l3 12h10v2H7L4 5H2V3zm6 16a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm10 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM9 6h12l-2 7H10L9 6z",
-    "fas fa-arrow-right": "M4 11h11.2l-4.6-4.6L12 5l7 7-7 7-1.4-1.4 4.6-4.6H4v-2z",
-    "fas fa-arrow-left": "M20 11H8.8l4.6-4.6L12 5l-7 7 7 7 1.4-1.4L8.8 13H20v-2z",
-    "fas fa-atom": "M12 9.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zm0-7.5c3 0 9 3.6 9 10s-6 10-9 10-9-3.6-9-10 6-10 9-10zm0 2C9.8 4 5 6.9 5 12s4.8 8 7 8 7-2.9 7-8-4.8-8-7-8z",
-    "fas fa-tint": "M12 2s7 8 7 12a7 7 0 1 1-14 0c0-4 7-12 7-12z",
-    "fas fa-dna": "M6 2c0 4 12 6 12 10S6 18 6 22h2c0-3 12-5 12-10S8 5 8 2H6zm10 0c0 1-1 1.8-2.4 2.6h-3.2C9 3.8 8 3 8 2h8zM8.4 19.4h7.2c-.9.7-2 1.2-3.6 1.6-1.6-.4-2.7-.9-3.6-1.6z",
-    "fas fa-envelope": "M2 5h20v14H2V5zm2 2v.2l8 5 8-5V7H4zm16 3.5-8 5-8-5V17h16v-6.5z",
-    "fas fa-chevron-down": "M6 9l6 6 6-6-1.4-1.4L12 12.2 7.4 7.6 6 9z",
-    "fas fa-chevron-up": "M6 15l6-6 6 6-1.4 1.4L12 11.8l-4.6 4.6L6 15z",
-    "fas fa-check-circle": "M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm-1 14 7-7-1.4-1.4L11 13.2l-2.6-2.6L7 12l4 4z",
+    "file-alt": '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/>'
+                '<path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>',
+    "check-circle": '<circle cx="12" cy="12" r="9"/><path d="m8.4 12.4 2.6 2.6 4.6-5.2"/>',
+    "credit-card": '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18"/>',
+    "paper-plane": '<path d="M21 3 3 9.6l7.2 3.2L13.4 21z"/><path d="m10.2 12.8 5.4-5.4"/>',
+    "gem": '<path d="M6 3h12l3 6-9 12L3 9z"/><path d="M3 9h18M9 3 6.2 9l5.8 12M15 3l2.8 6L12 21"/>',
+    "clipboard": '<rect x="6" y="4" width="12" height="17" rx="2.5"/>'
+                 '<rect x="9" y="2" width="6" height="4" rx="1.4"/>',
+    "clock": '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.4l3.4 2"/>',
+    "dot-circle": '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/>',
+    "clone": '<rect x="8" y="8" width="12" height="12" rx="2.4"/>'
+             '<path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+    "snowflake": '<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/>'
+                 '<path d="M12 6.6 9.7 4.7M12 6.6l2.3-1.9M12 17.4l-2.3 1.9M12 17.4l2.3 1.9"/>',
+    "envelope": '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.6 6.6 8.4 5.9 8.4-5.9"/>',
+    "arrow-alt-circle-left": '<circle cx="12" cy="12" r="9"/><path d="M13.4 8.4 9.8 12l3.6 3.6"/>',
+    "arrow-alt-circle-right": '<circle cx="12" cy="12" r="9"/><path d="M10.6 8.4 14.2 12l-3.6 3.6"/>',
+    "plus-square": '<rect x="4" y="4" width="16" height="16" rx="2.6"/><path d="M12 8.4v7.2M8.4 12h7.2"/>',
+    "minus-square": '<rect x="4" y="4" width="16" height="16" rx="2.6"/><path d="M8.4 12h7.2"/>',
 }
+
+NAVY, TEAL, BODY, MUTED, BORDER = "#0B1B3A", "#16A6A0", "#5B6B7C", "#8A99A8", "#E6ECF2"
 
 
 def icon_svg(value, color, size):
-    path = ICONS.get(value, ICONS["fas fa-certificate"])
-    return (f'<svg viewBox="0 0 24 24" width="{size}" height="{size}" '
-            f'fill="{color}" style="display:block"><path d="{path}"/></svg>')
+    name = value.replace("far fa-", "").replace("fas fa-", "")
+    body = ICONS.get(name, ICONS["dot-circle"])
+    return (f'<svg viewBox="0 0 24 24" width="{size}" height="{size}" fill="none" '
+            f'stroke="{color}" stroke-width="1.6" stroke-linecap="round" '
+            f'stroke-linejoin="round" style="display:block">{body}</svg>')
 
 
 # --- setting readers ---------------------------------------------------------
 def d(v, default=""):
-    """Dimensions control -> CSS shorthand."""
     if not v:
         return default
     u = v.get("unit", "px")
@@ -53,7 +61,6 @@ def d(v, default=""):
 
 
 def s(v, default=None):
-    """Slider control -> CSS length."""
     if not v or v.get("size") in ("", None):
         return default
     return f"{v['size']}{v.get('unit', 'px')}"
@@ -68,16 +75,14 @@ def bg_css(st, prefix=""):
         a = st.get(prefix + "background_color", "#fff")
         b = st.get(prefix + "background_color_b", "#fff")
         ang = st.get(prefix + "background_gradient_angle") or {"size": 180}
-        a_stop = s(st.get(prefix + "background_color_stop"), "0%")
-        b_stop = s(st.get(prefix + "background_color_b_stop"), "100%")
-        return (f"background-image:linear-gradient({ang['size']}deg,"
-                f"{a} {a_stop},{b} {b_stop});")
+        return (f"background-image:linear-gradient({ang['size']}deg,{a} "
+                f"{s(st.get(prefix + 'background_color_stop'), '0%')},"
+                f"{b} {s(st.get(prefix + 'background_color_b_stop'), '100%')});")
     return ""
 
 
 def box_css(st, prefix=""):
-    out = ""
-    out += bg_css(st, prefix)
+    out = bg_css(st, prefix)
     if st.get(prefix + "border_border"):
         out += (f"border-style:{st[prefix + 'border_border']};"
                 f"border-width:{d(st.get(prefix + 'border_width'), '1px')};"
@@ -109,112 +114,89 @@ def typo_css(st, p="typography_"):
     return out
 
 
-ALIGN_MAP = {"top": "flex-start", "middle": "center", "center": "center",
-             "bottom": "flex-end", "": "flex-start"}
-
-
 # --- widget renderers --------------------------------------------------------
 def r_heading(st):
     tag = st.get("header_size", "h2")
-    css = typo_css(st) + f"color:{st.get('title_color', '#000')};"
-    css += f"text-align:{st.get('align', 'left')};margin:0;"
+    css = (typo_css(st) + f"color:{st.get('title_color', '#000')};"
+           f"text-align:{st.get('align', 'left')};margin:0;")
     return f'<{tag} style="{css}">{st.get("title", "")}</{tag}>'
 
 
 def r_text(st):
-    css = typo_css(st) + f"color:{st.get('text_color', '#000')};"
-    css += f"text-align:{st.get('align', 'left')};"
+    css = (typo_css(st) + f"color:{st.get('text_color', '#000')};"
+           f"text-align:{st.get('align', 'left')};")
     return f'<div style="{css}">{st.get("editor", "")}</div>'
 
 
 def r_button(st):
     align = st.get("align", "left")
     wrap = f"text-align:{align};"
-    btn = ("display:inline-flex;align-items:center;justify-content:center;gap:"
-           f"{s(st.get('icon_indent'), '8px')};text-decoration:none;")
+    btn = ("display:inline-flex;align-items:center;justify-content:center;"
+           "text-decoration:none;white-space:pre;")
     btn += typo_css(st)
-    btn += f"background-color:{st.get('background_color', '#000')};"
-    btn += f"color:{st.get('button_text_color', '#fff')};"
-    btn += f"border-radius:{d(st.get('border_radius'), '0')};"
-    btn += f"padding:{d(st.get('text_padding'), '12px 24px')};"
+    btn += (f"background-color:{st.get('background_color', '#000')};"
+            f"color:{st.get('button_text_color', '#fff')};"
+            f"border-radius:{d(st.get('border_radius'), '0')};"
+            f"padding:{d(st.get('text_padding'), '12px 24px')};")
     if st.get("border_border"):
         btn += (f"border:{d(st.get('border_width'), '1px').split()[0]} "
                 f"{st['border_border']} {st.get('border_color', '#ddd')};")
     if align == "justify":
         btn += "width:100%;"
         wrap = ""
-    icon = ""
-    if st.get("selected_icon", {}).get("value"):
-        size = s(st.get("typography_font_size"), "14px")
-        icon = icon_svg(st["selected_icon"]["value"],
-                        st.get("button_text_color", "#fff"),
-                        str(round(float(size.replace("px", "")) * 1.05)))
-    return (f'<div style="{wrap}"><a href="#" style="{btn}">'
-            f'<span>{st.get("text", "")}</span>{icon}</a></div>')
+    return f'<div style="{wrap}"><a href="#" style="{btn}">{st.get("text", "")}</a></div>'
 
 
 def r_image(st):
     img = st.get("image", {})
-    w = s(st.get("width"), "100%")
-    align = st.get("align", "center")
-    just = {"left": "flex-start", "center": "center", "right": "flex-end"}[align]
+    just = {"left": "flex-start", "center": "center",
+            "right": "flex-end"}[st.get("align", "center")]
     return (f'<div style="display:flex;justify-content:{just};">'
             f'<img src="{img.get("url", "")}" alt="{html.escape(img.get("alt", ""))}" '
-            f'style="width:{w};height:auto;max-width:100%;"></div>')
+            f'style="width:{s(st.get("width"), "100%")};height:auto;max-width:100%;"></div>')
 
 
 def r_icon_box(st):
     pos = st.get("position", "left")
     view = st.get("view", "default")
-    icon_size = float((st.get("icon_size") or {}).get("size", 24))
+    size = float((st.get("icon_size") or {}).get("size", 24))
     color = (st.get("secondary_color") if view == "stacked"
              else st.get("primary_color", "#000"))
-    icon_html = icon_svg(st["selected_icon"]["value"], color, icon_size)
+    glyph = icon_svg(st["selected_icon"]["value"], color, size)
     if view == "stacked":
-        pad = s(st.get("icon_padding"), "16px")
-        icon_html = (f'<span style="display:inline-flex;padding:{pad};'
-                     f'background:{st.get("primary_color")};border-radius:50%;">'
-                     f"{icon_html}</span>")
-    title_css = typo_css(st, "title_typography_") + f"color:{st.get('title_color')};margin:0;"
-    desc_css = typo_css(st, "description_typography_") + f"color:{st.get('description_color')};margin:0;"
-    gap = s(st.get("icon_space"), "12px")
-    tb = s(st.get("title_bottom_space"), "4px")
-    direction = "row" if pos == "left" else "column"
-    return (f'<div style="display:flex;flex-direction:{direction};gap:{gap};'
-            f'align-items:center;">'
-            f'<div style="flex:0 0 auto;line-height:0;">{icon_html}</div>'
-            f'<div><h6 style="{title_css}">{st.get("title_text", "")}</h6>'
-            f'<p style="{desc_css}margin-top:{tb};">{st.get("description_text", "")}</p>'
-            f"</div></div>")
+        glyph = (f'<span style="display:inline-flex;padding:{s(st.get("icon_padding"), "16px")};'
+                 f'background:{st.get("primary_color")};border-radius:50%;">{glyph}</span>')
+    t_css = typo_css(st, "title_typography_") + f"color:{st.get('title_color')};margin:0;"
+    d_css = typo_css(st, "description_typography_") + f"color:{st.get('description_color')};margin:0;"
+    return (f'<div style="display:flex;flex-direction:{"row" if pos == "left" else "column"};'
+            f'gap:{s(st.get("icon_space"), "12px")};align-items:center;">'
+            f'<div style="flex:0 0 auto;line-height:0;">{glyph}</div>'
+            f'<div><h6 style="{t_css}">{st.get("title_text", "")}</h6>'
+            f'<p style="{d_css}margin-top:{s(st.get("title_bottom_space"), "4px")};">'
+            f'{st.get("description_text", "")}</p></div></div>')
 
 
 def r_icon(st):
-    view = st.get("view", "default")
     size = float((st.get("size") or {}).get("size", 20))
-    color = st.get("secondary_color") if view == "stacked" else st.get("primary_color", "#000")
-    inner = icon_svg(st["selected_icon"]["value"], color, size)
-    align = st.get("align", "left")
-    just = {"left": "flex-start", "center": "center", "right": "flex-end"}[align]
-    if view == "stacked":
-        pad = s(st.get("icon_padding"), "12px")
-        inner = (f'<span style="display:inline-flex;padding:{pad};'
-                 f'background:{st.get("primary_color")};border-radius:50%;">{inner}</span>')
-    return f'<div style="display:flex;justify-content:{just};">{inner}</div>'
+    just = {"left": "flex-start", "center": "center",
+            "right": "flex-end"}[st.get("align", "left")]
+    return (f'<div style="display:flex;justify-content:{just};">'
+            f'{icon_svg(st["selected_icon"]["value"], st.get("primary_color", "#000"), size)}</div>')
 
 
-def r_accordion(st):
+def r_nested_accordion(st, el):
+    t_css = typo_css(st, "title_typography_") + f"color:{st.get('normal_title_color', NAVY)};"
     rows = []
-    tcss = typo_css(st, "title_typography_") + f"color:{st.get('title_color')};"
-    for t in st.get("tabs", []):
+    for item in st.get("items", []):
         rows.append(
-            f'<div style="border:1px solid {st.get("border_color", "#eee")};'
-            'border-bottom:0;padding:15px 16px;display:flex;'
-            'justify-content:space-between;align-items:center;gap:12px;">'
-            f'<span style="{tcss}">{t["tab_title"]}</span>'
-            f'{icon_svg("fas fa-chevron-down", st.get("icon_color", "#999"), 13)}</div>'
+            f'<div style="border:1px solid {st.get("accordion_border_normal_color", BORDER)};'
+            f'border-bottom:0;padding:{d(st.get("accordion_padding"), "15px 16px")};'
+            'display:flex;justify-content:space-between;align-items:center;gap:12px;">'
+            f'<span style="{t_css}">{item["item_title"]}</span>'
+            f'{icon_svg("far fa-plus-square", st.get("normal_icon_color", MUTED), 13)}</div>'
         )
-    return (f'<div style="border-bottom:1px solid {st.get("border_color", "#eee")};">'
-            + "".join(rows) + "</div>")
+    return (f'<div style="border-bottom:1px solid '
+            f'{st.get("accordion_border_normal_color", BORDER)};">' + "".join(rows) + "</div>")
 
 
 def r_html(st):
@@ -225,9 +207,86 @@ def r_spacer(st):
     return f'<div style="height:{s(st.get("space"), "20px")}"></div>'
 
 
+# --- plugin stand-ins --------------------------------------------------------
+def stub(label, inner, tone="#1D66C9"):
+    return (f'<div style="position:relative;">'
+            f'<div style="position:absolute;top:-11px;left:0;z-index:5;background:{tone};'
+            'color:#fff;font:600 10px/1 Inter,Arial,sans-serif;letter-spacing:.4px;'
+            f'padding:5px 9px;border-radius:5px;">{label}</div>{inner}</div>')
+
+
+def r_shortcode(st):
+    """The hero lives in Slider Revolution; draw the intended slide."""
+    code = st.get("shortcode", "")
+    if "rev_slider" not in code:
+        return f'<code>{html.escape(code)}</code>'
+    pill = ('display:inline-flex;align-items:center;gap:6px;font:700 10px/1 Inter,Arial,'
+            'sans-serif;letter-spacing:.7px;text-transform:uppercase;padding:6px 11px;'
+            'border-radius:5px;')
+    btn = ('display:inline-flex;align-items:center;text-decoration:none;'
+           'font:600 14px/1.2 Inter,Arial,sans-serif;padding:14px 26px;border-radius:8px;')
+    inner = (
+        '<div style="display:flex;align-items:center;gap:24px;max-width:1200px;'
+        'margin-inline:auto;padding:56px 20px 40px;">'
+        '<div style="width:55%;">'
+        f'<div style="display:flex;gap:10px;margin-bottom:18px;">'
+        f'<span style="{pill}background:#E4F1EC;color:#1F7A63;">'
+        f'{icon_svg("far fa-check-circle", "#1F7A63", 11)} FDA Compliant</span>'
+        f'<span style="{pill}background:#E4EFF7;color:#1A5C9E;">'
+        f'{icon_svg("far fa-clipboard", "#1A5C9E", 11)} Lab Tested</span></div>'
+        f'<h1 style="font:700 46px/1.18 Inter,Arial,sans-serif;letter-spacing:-.6px;'
+        f'color:{NAVY};margin:0 0 16px;">High-Purity Peptides<br>for '
+        f'<span style="color:{TEAL}">Advanced Research</span></h1>'
+        f'<p style="font:400 15px/1.75 Inter,Arial,sans-serif;color:{BODY};margin:0;">'
+        'Pharmaceutical-grade peptides manufactured for research.<br>'
+        'Verified for purity, potency, and reliability.</p>'
+        f'<div style="display:flex;gap:12px;margin:28px 0 26px;">'
+        f'<a href="#" style="{btn}background:{NAVY};color:#fff;">Browse Catalog &nbsp;&rarr;</a>'
+        f'<a href="#" style="{btn}background:#fff;color:{NAVY};border:1px solid #D8E2EA;">'
+        'Research Standards</a></div>'
+        f'<div style="display:flex;gap:7px;align-items:center;">'
+        f'<span style="width:24px;height:6px;border-radius:3px;background:{NAVY};"></span>'
+        '<span style="width:6px;height:6px;border-radius:50%;background:#C3D2DE;"></span>'
+        '<span style="width:6px;height:6px;border-radius:50%;background:#C3D2DE;"></span>'
+        '</div></div>'
+        f'<div style="width:45%;"><img src="{A.data_uri(A.hero())}" alt="" '
+        'style="width:100%;height:auto;display:block;"></div></div>'
+    )
+    return stub("Slider Revolution &mdash; slider alias: peptides-hero", inner, "#C0392B")
+
+
+PRODUCTS = [("vial-bpc-157.svg", "BPC-157 5mg", "$59.99"),
+            ("vial-cjc-1295.svg", "CJC-1295 5mg", "$69.99"),
+            ("vial-ipamorelin.svg", "Ipamorelin 5mg", "$54.99"),
+            ("vial-tb-500.svg", "TB-500 5mg", "$64.99")]
+
+
+def r_woo_products(st):
+    """WooCommerce renders these at runtime from the chosen category."""
+    assets = A.all_assets()
+    cards = []
+    for f, name, price in PRODUCTS[:int(st.get("columns", 4))]:
+        cards.append(
+            f'<div style="flex:1;border:1px solid {BORDER};border-radius:12px;'
+            'padding:14px;background:#fff;box-shadow:0 4px 16px rgba(11,27,58,.05);">'
+            f'<div style="background:#F7FAFC;border-radius:10px;padding:12px 10px;'
+            'display:flex;justify-content:center;margin-bottom:12px;">'
+            f'<img src="{A.data_uri(assets[f])}" alt="" style="width:44%;height:auto;"></div>'
+            f'<div style="font:600 14.5px/1.4 Inter,Arial,sans-serif;color:{NAVY};'
+            f'margin-bottom:6px;">{name}</div>'
+            f'<div style="font:700 17px/1.3 Inter,Arial,sans-serif;color:{NAVY};'
+            f'margin-bottom:14px;">{price}</div>'
+            f'<a href="#" style="display:block;text-align:center;text-decoration:none;'
+            f'background:{NAVY};color:#fff;font:600 13px/1.2 Inter,Arial,sans-serif;'
+            'padding:12px 18px;border-radius:7px;">Add to cart</a></div>')
+    inner = f'<div style="display:flex;gap:20px;">{"".join(cards)}</div>'
+    return stub("WooCommerce Products &mdash; pick a category in the widget", inner)
+
+
 WIDGETS = {"heading": r_heading, "text-editor": r_text, "button": r_button,
            "image": r_image, "icon-box": r_icon_box, "icon": r_icon,
-           "accordion": r_accordion, "html": r_html, "spacer": r_spacer}
+           "html": r_html, "spacer": r_spacer, "shortcode": r_shortcode,
+           "woocommerce-products": r_woo_products}
 
 
 # --- tree walker -------------------------------------------------------------
@@ -236,8 +295,12 @@ def render(el):
     st = el.get("settings", {})
 
     if t == "widget":
-        fn = WIDGETS.get(el["widgetType"])
-        body = fn(st) if fn else f'<div>[{el["widgetType"]}]</div>'
+        w = el["widgetType"]
+        if w == "nested-accordion":
+            body = r_nested_accordion(st, el)
+        else:
+            fn = WIDGETS.get(w)
+            body = fn(st) if fn else f'<div>[{w}]</div>'
         css = "width:100%;"
         if st.get("_element_width") == "auto":
             css = "max-width:fit-content;"
@@ -248,44 +311,39 @@ def render(el):
         css += box_css(st, "_")
         return f'<div style="{css}">{body}</div>'
 
-    if t == "column":
-        width = st.get("_inline_size") or st.get("_column_size") or 100
-        gap_parent = el.get("_gap", 10)
-        pad = d(st.get("padding"), f"{gap_parent}px")
-        inner = "".join(render(c) for c in el["elements"])
-        vpos = ALIGN_MAP.get(st.get("content_position", ""), "flex-start")
-        wrap_css = (f"width:100%;display:flex;flex-direction:column;flex-wrap:wrap;"
-                    f"align-content:flex-start;justify-content:{vpos};"
-                    f"padding:{pad};{box_css(st)}")
-        return (f'<div class="col" style="width:{width}%;display:flex;'
-                f'min-height:1px;position:relative;">'
-                f'<div style="{wrap_css}">{inner}</div></div>')
+    # container
+    direction = st.get("flex_direction", "column")
+    gap = st.get("flex_gap") or {}
+    flex = (f"display:flex;flex-direction:{direction};"
+            f"gap:{gap.get('row', 0)}px {gap.get('column', 0)}px;"
+            f"flex-wrap:{st.get('flex_wrap', 'nowrap')};")
+    if st.get("flex_align_items"):
+        flex += f"align-items:{st['flex_align_items']};"
+    if st.get("flex_justify_content"):
+        flex += f"justify-content:{st['flex_justify_content']};"
 
-    # section
-    gap = GAPS.get(st.get("gap", "default"), 10)
-    for c in el["elements"]:
-        c["_gap"] = gap
-    cols = "".join(render(c) for c in el["elements"])
     outer = "position:relative;"
+    if st.get("width"):
+        outer += f"width:{s(st['width'])};"
+    else:
+        outer += "width:100%;"
+    if st.get("min_height"):
+        outer += f"min-height:{s(st['min_height'])};"
     if st.get("margin"):
         outer += f"margin:{d(st['margin'])};"
     if st.get("z_index"):
         outer += f"z-index:{st['z_index']};"
     outer += f"padding:{d(st.get('padding'), '0')};"
     outer += box_css(st)
-    maxw = ""
-    if st.get("layout") == "boxed" and st.get("content_width"):
-        maxw = f"max-width:{s(st['content_width'])};"
-    align = ALIGN_MAP.get(st.get("content_position", ""), "stretch")
-    if st.get("content_position") == "":
-        align = "stretch"
-    # Elementor: .elementor-widget-wrap > .elementor-element { width: 100% }
-    outer += "width:100%;"
-    if st.get("height") == "min-height" and st.get("custom_height"):
-        outer += f"min-height:{s(st['custom_height'])};"
-    return (f'<section style="{outer}">'
-            f'<div style="display:flex;margin-inline:auto;{maxw}'
-            f'align-items:{align};">{cols}</div></section>')
+
+    kids = "".join(render(c) for c in el["elements"])
+
+    if st.get("content_width") == "boxed":
+        bw = s(st.get("boxed_width"), "1140px")
+        return (f'<div class="e-con" style="{outer}display:flex;">'
+                f'<div style="{flex}max-width:{bw};width:100%;margin-inline:auto;">'
+                f'{kids}</div></div>')
+    return f'<div class="e-con" style="{outer}{flex}">{kids}</div>'
 
 
 HEAD = """<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -295,7 +353,6 @@ body{margin:0;background:#fff;font-family:Inter,'Helvetica Neue',Arial,sans-seri
  -webkit-font-smoothing:antialiased}
 p{margin:0}
 img{display:block}
-@media(max-width:1024px){.col{width:100%!important}}
 </style>"""
 
 

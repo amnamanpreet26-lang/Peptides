@@ -9,27 +9,65 @@ import sys
 
 # Widgets bundled with free Elementor. Anything outside this list would make the
 # template require Elementor Pro.
+# Widgets that come from a plugin rather than free Elementor. Allowed, but the
+# README has to state the dependency.
+PLUGIN_WIDGETS = {
+    "woocommerce-products": "Elementor Pro + WooCommerce",
+}
+
 FREE_WIDGETS = {
     "heading", "image", "text-editor", "video", "button", "divider", "spacer",
     "google_maps", "icon", "image-box", "icon-box", "star-rating", "image-gallery",
     "image-carousel", "icon-list", "counter", "progress", "testimonial", "tabs",
     "accordion", "toggle", "social-icons", "alert", "audio", "shortcode", "html",
     "menu-anchor", "sidebar", "text-path", "read-more", "rating",
+    "nested-accordion", "nested-tabs",
 }
 
 errors, warnings = [], []
+deps = set()
 
 
 def check(node, parent, depth, section_depth):
     t = node["elType"]
 
     if t == "widget":
-        if parent != "column":
-            errors.append(f"widget {node['widgetType']} not inside a column")
-        if node["widgetType"] not in FREE_WIDGETS:
-            errors.append(f"non-free widget: {node['widgetType']}")
-        if node["elements"]:
-            errors.append(f"widget {node['widgetType']} has children")
+        w = node["widgetType"]
+        if parent not in ("column", "container"):
+            errors.append(f"widget {w} not inside a column/container")
+        if w in PLUGIN_WIDGETS:
+            deps.add(PLUGIN_WIDGETS[w])
+        elif w not in FREE_WIDGETS:
+            errors.append(f"unknown widget: {w}")
+        # only nested widgets may carry child containers
+        if node["elements"] and not w.startswith("nested-"):
+            errors.append(f"widget {w} has children")
+        if w == "nested-accordion":
+            n_items = len(node["settings"].get("items", []))
+            if n_items != len(node["elements"]):
+                errors.append(f"nested-accordion: {n_items} items but "
+                              f"{len(node['elements'])} content containers")
+            for c in node["elements"]:
+                if c["elType"] != "container":
+                    errors.append("nested-accordion child is not a container")
+                check(c, "widget", depth + 1, section_depth)
+        return
+
+    if t == "container":
+        cw = node["settings"].get("content_width")
+        if cw not in (None, "boxed", "full"):
+            errors.append(f"bad content_width: {cw}")
+        fd = node["settings"].get("flex_direction")
+        if fd not in (None, "row", "column", "row-reverse", "column-reverse"):
+            errors.append(f"bad flex_direction: {fd}")
+        if fd == "row":
+            widths = [c["settings"].get("width", {}).get("size")
+                      for c in node["elements"] if c["elType"] == "container"]
+            widths = [w for w in widths if w]
+            if widths and abs(sum(widths) - 100) > 1.5:
+                warnings.append(f"row children sum to {round(sum(widths), 2)}%")
+        for c in node["elements"]:
+            check(c, "container", depth + 1, section_depth)
         return
 
     if t == "column":
@@ -85,8 +123,8 @@ def main():
             collect(c)
 
     for el in data["content"]:
-        if el["elType"] != "section":
-            errors.append("top-level element is not a section")
+        if el["elType"] not in ("section", "container"):
+            errors.append("top-level element is not a section/container")
         collect(el)
         check(el, "root", 0, 0)
 
@@ -102,11 +140,28 @@ def main():
         if svg.count("<svg") != 1:
             errors.append("nested svg root")
 
-    print(f"sections        : {len(data['content'])}")
+    kinds = {}
+
+    def count(e):
+        kinds[e["elType"]] = kinds.get(e["elType"], 0) + 1
+        for c in e.get("elements", []):
+            count(c)
+
+    for el in data["content"]:
+        count(el)
+    print(f"top-level       : {len(data['content'])}")
+    print(f"containers      : {kinds.get('container', 0)}")
+    print(f"legacy sections : {kinds.get('section', 0)}")
     print(f"elements        : {len(ids)}")
     print(f"widgets         : {len(widgets)}")
     print(f"widget types    : {', '.join(sorted(set(widgets)))}")
     print(f"embedded images : {len(uris)}")
+    print(f"plugin deps     : {', '.join(sorted(deps)) or 'none'}")
+    solid = re.findall(r'"(fas fa-[a-z0-9-]+)"', raw)
+    if solid:
+        errors.append(f"solid icons present: {sorted(set(solid))}")
+    outline = sorted(set(re.findall(r'"far fa-([a-z0-9-]+)"', raw)))
+    print(f"outline icons   : {', '.join(outline)}")
     print(f"file size       : {len(raw) / 1024:.0f} KB")
     for w in warnings:
         print("WARN :", w)
