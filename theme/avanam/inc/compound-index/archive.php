@@ -214,14 +214,29 @@ function avanam_ci_chips() {
 		),
 	);
 
-	$terms = get_terms(
-		array(
-			'taxonomy'   => 'product_cat',
-			'hide_empty' => true,
-			'parent'     => 0,
-			'orderby'    => 'name',
-		)
+	$args = array(
+		'taxonomy'   => 'product_cat',
+		// Categories you have just created have no products yet; showing them
+		// anyway means a new category appears on the shop page immediately.
+		'hide_empty' => avanam_ci_on( 'chips_hide_empty' ),
+		'orderby'    => 'name',
 	);
+
+	$source = avanam_ci_option( 'chips_source' );
+
+	if ( 'custom' === $source ) {
+		$picked = array_filter( array_map( 'absint', (array) avanam_ci_option( 'chips_terms' ) ) );
+		if ( ! $picked ) {
+			return $chips;
+		}
+		$args['include']    = $picked;
+		$args['hide_empty'] = false;
+		$args['orderby']    = 'include';
+	} elseif ( 'top_level' === $source ) {
+		$args['parent'] = 0;
+	}
+
+	$terms = get_terms( $args );
 
 	if ( is_wp_error( $terms ) ) {
 		return $chips;
@@ -242,88 +257,6 @@ function avanam_ci_chips() {
 	}
 
 	return apply_filters( 'avanam_ci_chips', $chips );
-}
-
-/**
- * Badges for a product card.
- *
- * The highlighted one on the left is the shop-wide status badge; the plain one
- * on the right comes from the "Card badge" field on the product's category.
- *
- * @param WC_Product $product Product.
- * @return array List of array{label:string,tone:string}.
- */
-function avanam_ci_card_badges( $product ) {
-	$badges = array();
-	$status = (string) avanam_ci_option( 'badge' );
-
-	if ( '' !== $status ) {
-		$badges[] = array(
-			'label' => $status,
-			'tone'  => 'primary',
-		);
-	}
-
-	$terms = get_the_terms( $product->get_id(), 'product_cat' );
-
-	if ( $terms && ! is_wp_error( $terms ) ) {
-		foreach ( $terms as $term ) {
-			$badge = avanam_ci_term_field( $term->term_id, 'ci_badge' );
-			if ( '' !== $badge ) {
-				$badges[] = array(
-					'label' => $badge,
-					'tone'  => 'plain',
-				);
-				break;
-			}
-		}
-	}
-
-	return apply_filters( 'avanam_ci_card_badges', $badges, $product );
-}
-
-/**
- * The small grey line under a product name, built from chosen attributes.
- *
- * @param WC_Product $product Product.
- * @return string
- */
-function avanam_ci_card_spec( $product ) {
-	$parts = array();
-
-	foreach ( (array) avanam_ci_option( 'spec_attrs' ) as $taxonomy ) {
-		$value = $product->get_attribute( $taxonomy );
-		if ( '' !== $value ) {
-			$parts[] = $value;
-		}
-	}
-
-	return implode( ' · ', $parts );
-}
-
-/**
- * The label / value rows on a card.
- *
- * Falls back to the price so a card is never empty before attributes are set up.
- *
- * @param WC_Product $product Product.
- * @return array label => value
- */
-function avanam_ci_card_rows( $product ) {
-	$rows = array();
-
-	foreach ( (array) avanam_ci_option( 'row_attrs' ) as $taxonomy ) {
-		$value = $product->get_attribute( $taxonomy );
-		if ( '' !== $value ) {
-			$rows[ wc_attribute_label( $taxonomy ) ] = $value;
-		}
-	}
-
-	if ( ! $rows && $product->get_price_html() ) {
-		$rows[ __( 'Price', 'avanam' ) ] = wp_strip_all_tags( $product->get_price_html() );
-	}
-
-	return apply_filters( 'avanam_ci_card_rows', $rows, $product );
 }
 
 /**
@@ -411,6 +344,23 @@ function avanam_ci_remove_theme_top_row() {
 	}
 }
 add_action( 'wp', 'avanam_ci_remove_theme_top_row', 20 );
+
+/**
+ * Let the Columns setting drive the WooCommerce loop.
+ *
+ * @param int $columns Current column count.
+ * @return int
+ */
+function avanam_ci_loop_columns( $columns ) {
+	if ( ! avanam_ci_is_active() ) {
+		return $columns;
+	}
+
+	$set = absint( avanam_ci_option( 'columns' ) );
+
+	return $set ? $set : $columns;
+}
+add_filter( 'loop_shop_columns', 'avanam_ci_loop_columns', 20 );
 
 /**
  * Add alphabetical sorting, which the design uses and WooCommerce omits.

@@ -33,14 +33,13 @@ function avanam_ci_defaults() {
 		'chips'        => 'yes',
 		'chip_counts'  => 'yes',
 		'chips_label'  => __( 'All', 'avanam' ),
+		'chips_source' => 'top_level',
+		'chips_terms'  => array(),
+		'chips_hide_empty' => 'no',
 		'search'       => 'yes',
 		'result_count' => 'yes',
 		'sorting'      => 'yes',
-		'columns'      => '3',
-		'spec_attrs'   => array(),
-		'row_attrs'    => array(),
-		'link_label'   => __( 'Specification', 'avanam' ),
-		'badge'        => __( 'Documented', 'avanam' ),
+		'columns'      => '4',
 		'cta'          => 'yes',
 		'cta_title'    => __( 'Looking for something not listed?', 'avanam' ),
 		'cta_text'     => __( 'The full index runs to every compound we hold, each with its own specification and certificate.', 'avanam' ),
@@ -138,11 +137,11 @@ function avanam_ci_sanitize( $input ) {
 	$input    = is_array( $input ) ? $input : array();
 	$out      = array();
 
-	foreach ( array( 'chips', 'chip_counts', 'search', 'result_count', 'sorting', 'cta' ) as $key ) {
+	foreach ( array( 'chips', 'chip_counts', 'chips_hide_empty', 'search', 'result_count', 'sorting', 'cta' ) as $key ) {
 		$out[ $key ] = empty( $input[ $key ] ) ? 'no' : 'yes';
 	}
 
-	$text = array( 'eyebrow', 'title', 'chips_label', 'link_label', 'badge', 'cta_title', 'cta_button' );
+	$text = array( 'eyebrow', 'title', 'chips_label', 'cta_title', 'cta_button' );
 	for ( $i = 1; $i <= AVANAM_CI_STAT_SLOTS; $i++ ) {
 		$text[] = 'stat_' . $i . '_value';
 		$text[] = 'stat_' . $i . '_label';
@@ -154,9 +153,9 @@ function avanam_ci_sanitize( $input ) {
 	$out['intro']      = isset( $input['intro'] ) ? sanitize_textarea_field( wp_unslash( $input['intro'] ) ) : $defaults['intro'];
 	$out['cta_text']   = isset( $input['cta_text'] ) ? sanitize_textarea_field( wp_unslash( $input['cta_text'] ) ) : $defaults['cta_text'];
 	$out['cta_url']    = isset( $input['cta_url'] ) ? esc_url_raw( wp_unslash( $input['cta_url'] ) ) : '';
-	$out['columns']    = (string) max( 2, min( 4, absint( $input['columns'] ?? 3 ) ) );
-	$out['spec_attrs'] = array_map( 'sanitize_key', (array) ( $input['spec_attrs'] ?? array() ) );
-	$out['row_attrs']  = array_map( 'sanitize_key', (array) ( $input['row_attrs'] ?? array() ) );
+	$out['columns']      = (string) max( 2, min( 6, absint( $input['columns'] ?? 4 ) ) );
+	$out['chips_source'] = in_array( ( $input['chips_source'] ?? '' ), array( 'top_level', 'all', 'custom' ), true ) ? $input['chips_source'] : 'top_level';
+	$out['chips_terms']  = array_map( 'absint', (array) ( $input['chips_terms'] ?? array() ) );
 
 	return $out;
 }
@@ -170,7 +169,8 @@ function avanam_ci_settings_page() {
 	}
 
 	$name  = AVANAM_CI_OPTION;
-	$attrs = avanam_ci_attribute_choices();
+	$terms = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) );
+	$terms = is_wp_error( $terms ) ? array() : $terms;
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Compound Index', 'avanam' ); ?></h1>
@@ -235,64 +235,49 @@ function avanam_ci_settings_page() {
 				</tr>
 				<tr>
 					<th scope="row"><label for="ci-all"><?php esc_html_e( '"All" chip label', 'avanam' ); ?></label></th>
-					<td><input id="ci-all" type="text" name="<?php echo esc_attr( "{$name}[chips_label]" ); ?>" value="<?php echo esc_attr( avanam_ci_option( 'chips_label' ) ); ?>"></td>
-				</tr>
-				<tr>
-					<th scope="row"><label for="ci-cols"><?php esc_html_e( 'Columns', 'avanam' ); ?></label></th>
-					<td><input id="ci-cols" type="number" min="2" max="4" class="small-text" name="<?php echo esc_attr( "{$name}[columns]" ); ?>" value="<?php echo esc_attr( avanam_ci_option( 'columns' ) ); ?>"></td>
-				</tr>
-			</table>
-
-			<h2 class="title"><?php esc_html_e( 'Card details', 'avanam' ); ?></h2>
-			<p class="description" style="max-width:60em">
-				<?php esc_html_e( 'Cards read existing WooCommerce product attributes - nothing is added to your products. Set attributes up under Products - Attributes and assign them on each product as usual.', 'avanam' ); ?>
-			</p>
-			<table class="form-table" role="presentation">
-				<?php if ( ! $attrs ) : ?>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Attributes', 'avanam' ); ?></th>
-						<td>
-							<p class="description">
-								<?php esc_html_e( 'No global product attributes exist yet. Create some under Products - Attributes and they will appear here. Until then cards show the product price.', 'avanam' ); ?>
-							</p>
-						</td>
-					</tr>
-				<?php else : ?>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Spec line', 'avanam' ); ?></th>
-						<td>
-							<?php foreach ( $attrs as $taxonomy => $label ) : ?>
-								<label style="display:block">
-									<input type="checkbox" name="<?php echo esc_attr( "{$name}[spec_attrs][]" ); ?>" value="<?php echo esc_attr( $taxonomy ); ?>" <?php checked( in_array( $taxonomy, (array) avanam_ci_option( 'spec_attrs' ), true ) ); ?>>
-									<?php echo esc_html( $label ); ?>
-								</label>
-							<?php endforeach; ?>
-							<p class="description"><?php esc_html_e( 'Joined with a dot on the small grey line under the product name.', 'avanam' ); ?></p>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Data rows', 'avanam' ); ?></th>
-						<td>
-							<?php foreach ( $attrs as $taxonomy => $label ) : ?>
-								<label style="display:block">
-									<input type="checkbox" name="<?php echo esc_attr( "{$name}[row_attrs][]" ); ?>" value="<?php echo esc_attr( $taxonomy ); ?>" <?php checked( in_array( $taxonomy, (array) avanam_ci_option( 'row_attrs' ), true ) ); ?>>
-									<?php echo esc_html( $label ); ?>
-								</label>
-							<?php endforeach; ?>
-							<p class="description"><?php esc_html_e( 'Each becomes a label / value row, like Purity and Latest lot in the design.', 'avanam' ); ?></p>
-						</td>
-					</tr>
-				<?php endif; ?>
-				<tr>
-					<th scope="row"><label for="ci-badge"><?php esc_html_e( 'Status badge', 'avanam' ); ?></label></th>
 					<td>
-						<input id="ci-badge" type="text" name="<?php echo esc_attr( "{$name}[badge]" ); ?>" value="<?php echo esc_attr( avanam_ci_option( 'badge' ) ); ?>">
-						<p class="description"><?php esc_html_e( 'Highlighted badge in the top-left of every card. Leave blank for none. The plain badge in the top-right comes from each category\'s own "Card badge" field.', 'avanam' ); ?></p>
+						<input id="ci-all" type="text" name="<?php echo esc_attr( "{$name}[chips_label]" ); ?>" value="<?php echo esc_attr( avanam_ci_option( 'chips_label' ) ); ?>">
+						<p class="description"><?php esc_html_e( 'The first chip, which links to the shop page and shows every product.', 'avanam' ); ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="ci-link"><?php esc_html_e( 'Card link text', 'avanam' ); ?></label></th>
-					<td><input id="ci-link" type="text" name="<?php echo esc_attr( "{$name}[link_label]" ); ?>" value="<?php echo esc_attr( avanam_ci_option( 'link_label' ) ); ?>"></td>
+					<th scope="row"><?php esc_html_e( 'Which categories', 'avanam' ); ?></th>
+					<td>
+						<label style="display:block;margin-bottom:4px">
+							<input type="radio" name="<?php echo esc_attr( "{$name}[chips_source]" ); ?>" value="top_level" <?php checked( 'top_level' === avanam_ci_option( 'chips_source' ) ); ?>>
+							<?php esc_html_e( 'Top-level product categories', 'avanam' ); ?>
+						</label>
+						<label style="display:block;margin-bottom:4px">
+							<input type="radio" name="<?php echo esc_attr( "{$name}[chips_source]" ); ?>" value="all" <?php checked( 'all' === avanam_ci_option( 'chips_source' ) ); ?>>
+							<?php esc_html_e( 'Every product category, sub-categories included', 'avanam' ); ?>
+						</label>
+						<label style="display:block;margin-bottom:6px">
+							<input type="radio" name="<?php echo esc_attr( "{$name}[chips_source]" ); ?>" value="custom" <?php checked( 'custom' === avanam_ci_option( 'chips_source' ) ); ?>>
+							<?php esc_html_e( 'Only the ones I pick:', 'avanam' ); ?>
+						</label>
+						<select multiple size="6" name="<?php echo esc_attr( "{$name}[chips_terms][]" ); ?>" style="min-width:320px">
+							<?php foreach ( $terms as $ci_term ) : ?>
+								<option value="<?php echo esc_attr( $ci_term->term_id ); ?>" <?php selected( in_array( (int) $ci_term->term_id, array_map( 'absint', (array) avanam_ci_option( 'chips_terms' ) ), true ) ); ?>>
+									<?php echo esc_html( $ci_term->name . ' (' . $ci_term->count . ')' ); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+						<p class="description"><?php esc_html_e( 'The first two options pick themselves up as you add categories.', 'avanam' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Empty categories', 'avanam' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="<?php echo esc_attr( "{$name}[chips_hide_empty]" ); ?>" value="yes" <?php checked( avanam_ci_on( 'chips_hide_empty' ) ); ?>>
+							<?php esc_html_e( 'Hide categories that have no products yet', 'avanam' ); ?>
+						</label>
+						<p class="description"><?php esc_html_e( 'Off by default, so a category you have just added shows up straight away.', 'avanam' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="ci-cols"><?php esc_html_e( 'Columns', 'avanam' ); ?></label></th>
+					<td><input id="ci-cols" type="number" min="2" max="6" class="small-text" name="<?php echo esc_attr( "{$name}[columns]" ); ?>" value="<?php echo esc_attr( avanam_ci_option( 'columns' ) ); ?>"></td>
 				</tr>
 			</table>
 

@@ -320,180 +320,105 @@
 	line-height: 1;
 }
 
-/* ------------------------------------------------------------------ grid -- */
+/* ---------------------------------------------------------- product grid -- */
+/*
+ * The grid below is WooCommerce's own loop, rendered by Avanam, so these rules
+ * target the theme's classes (.product-thumbnail, .product-details,
+ * .product-actions) rather than any markup of ours.
+ *
+ * Two corrections against the CSS this came from:
+ *  - the card shadow was scoped to .product_cat-uncategorized, so it vanished
+ *    as soon as a product was given a real category. It now applies to every
+ *    product card.
+ *  - the image hover set transform twice, so scale(1.08) never applied. The two
+ *    values are now combined; drop the scale here if you only want the rotation.
+ *  - the floating thumbnail had no width, so it hugged the left edge whenever a
+ *    product photo was narrower than the card.
+ */
 
-.compound-index .ci-grid {
-	display: grid;
-	gap: var(--ci-gap);
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	margin: 0 0 40px;
+.woocommerce ul.product-archive {
+	column-gap: 25px !important;
+	row-gap: 95px !important;
 }
 
-.compound-index .ci-grid--2 {
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+.woocommerce:not(.categories-wrap) ul.products.grid-cols li.product:before,
+.woocommerce:not(.categories-wrap) ul.products.grid-cols:after {
+	border: none !important;
 }
 
-.compound-index .ci-grid--4 {
-	grid-template-columns: repeat(4, minmax(0, 1fr));
+.woocommerce ul.products li.product {
+	background: #ffffff;
+	margin: 0 !important;
+	overflow: visible !important;
+	border: 1px solid #f0f0f0 !important;
+	box-shadow: rgba(99, 99, 99, 0.1) 0 2px 50px 0 !important;
+	transition: all 0.35s ease;
 }
 
-.compound-index .ci-card {
-	display: flex;
-	flex-direction: column;
-	border: 1px solid var(--ci-line);
-	border-radius: var(--ci-radius);
-	background: #fff;
-	overflow: hidden;
-	transition: border-color 0.18s ease, box-shadow 0.18s ease;
+.woocommerce ul.products li.product:hover {
+	transform: translateY(-8px);
+	border: 1px solid #010715 !important;
+	box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
 }
 
-.compound-index .ci-card:hover {
-	border-color: #d6dae1;
-	box-shadow: 0 6px 22px rgba(17, 29, 51, 0.06);
-}
-
-.compound-index .ci-card__media {
-	position: relative;
-	display: block;
-	aspect-ratio: 4 / 3;
-	background: var(--ci-surface);
-	overflow: hidden;
-}
-
-.compound-index .ci-card__media img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	display: block;
-	margin: 0;
-	border-radius: 0;
-}
-
-.compound-index .ci-card__badges {
+/* Product shot, floated above the card and tilted. */
+.woocommerce ul.products li.product .product-thumbnail {
 	position: absolute;
-	inset: 10px 10px auto 10px;
-	display: flex;
-	align-items: flex-start;
-	justify-content: space-between;
-	gap: 6px;
-	pointer-events: none;
+	z-index: 9;
+	top: -80px;
+	/* Absolute positioning makes this shrink to the image, which pins a small
+	   product photo to the left edge. A full width keeps the `margin: auto` on
+	   the image below centred whatever size the photo is. */
+	width: 100%;
+	overflow: hidden;
+	border-radius: 18px 18px 0 0;
+	transform: rotate(-20deg);
 }
 
-.compound-index .ci-badge {
-	display: inline-block;
-	padding: 4px 8px;
-	border-radius: 4px;
-	font-family: var(--ci-font-mono);
-	font-size: 8.5px;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
-	line-height: 1.2;
-	white-space: nowrap;
+.product-thumbnail a img {
+	max-width: 50% !important;
+	margin: auto !important;
 }
 
-.compound-index .ci-badge--primary {
-	background: var(--ci-badge-bg);
-	color: var(--ci-badge-ink);
+.woocommerce ul.products li.product img {
+	transition: transform 1s ease;
 }
 
-.compound-index .ci-badge--plain {
-	background: #fff;
-	color: var(--ci-ink);
-	box-shadow: 0 1px 3px rgba(17, 29, 51, 0.12);
+.woocommerce ul.products li.product:hover img {
+	transform: rotate(20deg) scale(1.08);
 }
 
-/* Only one badge, on the right: keep it right-aligned. */
-.compound-index .ci-card__badges .ci-badge--plain:only-child {
-	margin-left: auto;
+/* Over-image action icons are not part of this design. */
+.product-actions {
+	display: none !important;
 }
 
-.compound-index .ci-card__body {
-	display: flex;
-	flex-direction: column;
-	flex: 1 1 auto;
-	padding: 14px 16px 4px;
+.product-details {
+	margin-top: 60px !important;
 }
 
-.compound-index .ci-card__title {
-	margin: 0 0 5px;
-	font-size: 13.5px;
-	font-weight: 500;
-	line-height: 1.35;
-	letter-spacing: 0;
-	color: var(--ci-ink);
+.post-type-archive-product .product-archive {
+	margin-top: 80px !important;
 }
 
-.compound-index .ci-card__title a {
-	color: inherit;
-	text-decoration: none;
+.post-type-archive-product .product-details {
+	margin-top: 50px !important;
 }
 
-.compound-index .ci-card__title a:hover {
-	text-decoration: underline;
-	text-underline-offset: 2px;
+.add_to_cart_button {
+	color: #fff !important;
+	background: #0b2545 !important;
 }
 
-.compound-index .ci-card__spec {
-	margin: 0 0 12px;
-	font-family: var(--ci-font-mono);
-	font-size: 10px;
-	line-height: 1.5;
-	color: var(--ci-muted);
+.add_to_cart_button:hover {
+	color: #fff !important;
+	background: #019da6 !important;
 }
 
-.compound-index .ci-card__data {
-	margin: 0;
-	border-top: 1px solid var(--ci-line-soft);
-}
-
-.compound-index .ci-card__row {
-	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: 12px;
-	padding: 8px 0;
-	border-bottom: 1px solid var(--ci-line-soft);
-}
-
-.compound-index .ci-card__row dt,
-.compound-index .ci-card__row dd {
-	margin: 0;
-	font-family: var(--ci-font-mono);
-	font-size: 10.5px;
-	line-height: 1.4;
-}
-
-.compound-index .ci-card__row dt {
-	color: var(--ci-muted);
-}
-
-.compound-index .ci-card__row dd {
-	color: var(--ci-ink);
-	font-weight: 500;
-	text-align: right;
-}
-
-.compound-index .ci-card__link {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	margin-top: auto;
-	padding: 11px 0 13px;
-	font-size: 11.5px;
-	color: var(--ci-body);
-	text-decoration: none;
-}
-
-.compound-index .ci-card__link:hover {
-	color: var(--ci-navy);
-}
-
-.compound-index .ci-card__arrow {
-	transition: transform 0.15s ease;
-}
-
-.compound-index .ci-card__link:hover .ci-card__arrow {
-	transform: translateX(3px);
+@media (max-width: 767px) {
+	.woocommerce ul.products li.product .product-thumbnail {
+		top: -40px;
+	}
 }
 
 /* ------------------------------------------------------------ pagination -- */
@@ -650,23 +575,12 @@
 /* ------------------------------------------------------------ responsive -- */
 
 @media (max-width: 1024px) {
-	.compound-index .ci-grid,
-	.compound-index .ci-grid--4 {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
-
 	.compound-index .ci-stats {
 		gap: 14px 36px;
 	}
 }
 
 @media (max-width: 640px) {
-
-	.compound-index .ci-grid,
-	.compound-index .ci-grid--2,
-	.compound-index .ci-grid--4 {
-		grid-template-columns: minmax(0, 1fr);
-	}
 
 	.compound-index .ci-head {
 		padding-top: 24px;

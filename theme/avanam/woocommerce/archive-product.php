@@ -4,9 +4,9 @@
  *
  * Overrides wp-content/plugins/woocommerce/templates/archive-product.php.
  *
- * The loop is WooCommerce's ordinary main query, so category archives, search,
- * sorting and pagination behave exactly as they normally do and no product data
- * is invented here.
+ * The header and toolbar are ours; the product grid below is WooCommerce's
+ * ordinary loop, rendered by the theme, so product cards keep every class the
+ * theme and its stylesheet expect.
  *
  * @package Avanam
  */
@@ -17,9 +17,6 @@ get_header( 'shop' );
 
 /** Opens the theme's content wrapper. */
 do_action( 'woocommerce_before_main_content' );
-
-$ci_columns = absint( avanam_ci_option( 'columns' ) );
-$ci_columns = $ci_columns ? $ci_columns : 3;
 ?>
 
 <div class="compound-index">
@@ -33,16 +30,22 @@ $ci_columns = $ci_columns ? $ci_columns : 3;
 	do_action( 'woocommerce_before_shop_loop' );
 	?>
 
-	<?php if ( have_posts() ) : ?>
+	<?php if ( woocommerce_product_loop() ) : ?>
 
-		<div class="ci-grid ci-grid--<?php echo esc_attr( $ci_columns ); ?>">
+		<?php woocommerce_product_loop_start(); ?>
+
 			<?php
 			while ( have_posts() ) :
 				the_post();
-				avanam_ci_part( 'card' );
+
+				/** Lets plugins hook each item, as they would on any archive. */
+				do_action( 'woocommerce_shop_loop' );
+
+				wc_get_template_part( 'content', 'product' );
 			endwhile;
 			?>
-		</div>
+
+		<?php woocommerce_product_loop_end(); ?>
 
 		<?php avanam_ci_part( 'pagination' ); ?>
 

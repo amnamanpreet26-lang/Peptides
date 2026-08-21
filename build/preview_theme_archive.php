@@ -126,6 +126,38 @@ function get_the_terms( $id, $tax ) {
 
 // --- woocommerce ------------------------------------------------------------
 function wc_get_page_permalink( $p ) { return 'https://example.com/shop/'; }
+function wc_get_loop_prop( $p, $d = '' ) { return 'columns' === $p ? 4 : $d; }
+function woocommerce_product_loop() { return count( $GLOBALS['ci_products'] ) > 0; }
+function woocommerce_product_loop_start() {
+	// Mirrors Avanam\'s Woocommerce::product_loop_start() output.
+	echo '<ul class="products content-wrap product-archive grid-cols grid-ss-col-2 grid-sm-col-3 grid-lg-col-4'
+		. ' woo-archive-normal woo-archive-btn-normal woo-archive-loop align-buttons-bottom'
+		. ' woo-archive-image-hover-none">';
+}
+function woocommerce_product_loop_end() { echo '</ul>'; }
+function wc_get_template_part( $slug, $name = '' ) {
+	// Mirrors the markup Avanam builds around WooCommerce\'s content-product.php.
+	$p    = $GLOBALS['product'];
+	$row  = $GLOBALS['ci_products'][ $p->get_id() - 1 ];
+	$full = 3 === $p->get_id() % 4;
+	$stars = '';
+	for ( $i = 0; $i < 5; $i++ ) { $stars .= $full ? '&#9733;' : '&#9734;'; }
+	echo '<li class="product type-product status-publish instock has-post-thumbnail purchasable'
+		. ' product-type-simple entry content-bg loop-entry">'
+		. '<div class="product-thumbnail">'
+			. '<a href="#"><img src="' . esc_attr( $row['img'] ) . '" alt=""></a>'
+			. '<div class="product-actions"></div>'
+		. '</div>'
+		. '<div class="product-details content-bg entry-content-wrap">'
+			. '<h2 class="woocommerce-loop-product__title"><a href="#">' . esc_html( $p->get_name() ) . '</a></h2>'
+			. '<div class="star-rating">' . $stars . '</div>'
+			. '<span class="price"><span class="woocommerce-Price-amount amount">' . esc_html( $p->get_price_html() ) . '</span></span>'
+			. '<div class="product-action-wrap style-normal">'
+				. '<a href="#" class="button product_type_simple add_to_cart_button">Add to cart</a>'
+			. '</div>'
+		. '</div>'
+		. '</li>';
+}
 function wc_clean( $v ) { return sanitize_text_field( $v ); }
 function wc_query_string_form_fields( ...$a ) {}
 function wc_placeholder_img( $s = '', $a = array() ) { return '<img class="ci-card__img" src="" alt="">'; }
@@ -139,7 +171,7 @@ class WC_Product {
 	public function get_id() { return $this->d['id']; }
 	public function get_name() { return $this->d['name']; }
 	public function is_visible() { return true; }
-	public function get_price_html() { return '$59.99'; }
+	public function get_price_html() { return '$14'; }
 	public function get_attribute( $tax ) { return $this->d['attrs'][ $tax ] ?? ''; }
 	public function get_image( $s = '', $a = array() ) {
 		return '<img class="ci-card__img" src="' . esc_attr( $this->d['img'] ) . '" alt="">';
@@ -168,15 +200,24 @@ $GLOBALS['ci_termmeta'][12]['ci_badge'] = 'Blend';
 
 $images = array();
 foreach ( array( 'vial-bpc-157', 'vial-cjc-1295', 'vial-ipamorelin', 'vial-tb-500' ) as $n ) {
-	$f        = $root . '/assets/images/' . $n . '.svg';
-	$images[] = is_readable( $f ) ? 'data:image/svg+xml;base64,' . base64_encode( file_get_contents( $f ) ) : '';
+	$f = $root . '/assets/images/' . $n . '.svg';
+	if ( ! is_readable( $f ) ) { $images[] = ''; continue; }
+	// The sample vials are tall and narrow; real product photos are roughly
+	// square, so pad the viewBox to a square for a representative preview.
+	$svg = file_get_contents( $f );
+	$svg = str_replace(
+		array( 'viewBox="44 0 112 190"', 'width="112" height="190"' ),
+		array( 'viewBox="5 0 190 190"', 'width="190" height="190"' ),
+		$svg
+	);
+	$images[] = 'data:image/svg+xml;base64,' . base64_encode( $svg );
 }
 
 $rows = array(
-	array( 'BPC-157 · 5 mg', '137525-51-0', '1419.5 g/mol', '99.4%', 'B-2408-17', array( 11 ) ),
-	array( 'CJC-1295 (no DAC) · 5 mg', '863288-34-0', '3647.2 g/mol', '99.1%', 'C-2408-04', array( 11 ) ),
-	array( 'Ipamorelin · 5 mg', '170851-70-4', '711.9 g/mol', '99.6%', 'I-2407-22', array( 11 ) ),
-	array( 'TB-500 · 5 mg', '77591-33-4', '4963.4 g/mol', '99.2%', 'T-2408-09', array( 11 ) ),
+	array( 'Testing-4', '137525-51-0', '1419.5 g/mol', '99.4%', 'B-2408-17', array( 11 ) ),
+	array( 'Testing-3', '863288-34-0', '3647.2 g/mol', '99.1%', 'C-2408-04', array( 11 ) ),
+	array( 'Testing-1', '170851-70-4', '711.9 g/mol', '99.6%', 'I-2407-22', array( 11 ) ),
+	array( 'Testing-2', '77591-33-4', '4963.4 g/mol', '99.2%', 'T-2408-09', array( 11 ) ),
 	array( 'CJC-1295 + Ipamorelin · 10 mg', '', '5 mg + 5 mg · blended 1:1', '99.0%', 'X-2407-11', array( 11, 12 ) ),
 	array( 'GHK-Cu · 50 mg', '89030-95-5', '402.9 g/mol', '99.0%', 'G-2406-31', array( 11, 12 ) ),
 	array( 'Epitalon · 10 mg', '307297-39-8', '390.3 g/mol', '98.9%', 'E-2408-02', array( 13 ) ),
@@ -232,8 +273,11 @@ $html = '<!doctype html><html lang="en"><head><meta charset="utf-8">'
 	. '<meta name="viewport" content="width=device-width,initial-scale=1">'
 	. '<title>Avanam - Compound Index preview</title>'
 	// Mimic the theme's own page container so widths match the real site.
-	. '<style>body{margin:0;background:#fff}.site-container{max-width:1290px;margin-inline:auto;padding:0 30px}</style>'
-	. '<style>' . $css . '</style></head><body><div class="site-container">'
+	// Stand-in for the Avanam base styles the archive sits on.
+	. '<style>' . file_get_contents( __DIR__ . '/preview-theme-shim.css' ) . '</style>'
+	. '<style>' . $css . '</style></head>'
+	. '<body class="woocommerce post-type-archive post-type-archive-product">'
+	. '<div class="site-container">'
 	. $body . '</div></body></html>';
 
 file_put_contents( $root . '/build/theme-archive-preview.html', $html );

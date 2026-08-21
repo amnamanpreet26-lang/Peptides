@@ -53,12 +53,6 @@ function avanam_ci_category_fields() {
 		);
 	}
 
-	$fields['ci_badge'] = array(
-		'label'       => __( 'Card badge', 'avanam' ),
-		'type'        => 'text',
-		'description' => __( 'Shown in the corner of every product card in this category, e.g. Blend. Leave blank for none.', 'avanam' ),
-	);
-
 	return $fields;
 }
 
