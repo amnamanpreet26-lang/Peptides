@@ -1,4 +1,6 @@
 build/preview.html
 build/preview.png
+build/archive-preview.html
+build/archive-preview.png
 __pycache__/
 *.pyc

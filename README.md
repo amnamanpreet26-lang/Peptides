@@ -6,10 +6,20 @@ covers the page content only, so it drops into any theme's header/footer.
 
 ```
 templates/peptides-homepage.json    <- import this into Elementor
+compound-index.zip                  <- WooCommerce archive plugin, ready to upload
+plugin/compound-index/              <- ...and its source
 docs/slider-revolution-hero.md      <- how to build the hero slider
+docs/archive-product-page.md        <- how to change the shop/category archive
 assets/images/*.svg                 <- artwork (hero, COA, category, product vials)
 build/                              <- generator scripts (optional, see below)
 ```
+
+Two separate deliverables live here:
+
+| | What it does |
+|---|---|
+| **Homepage** — `templates/peptides-homepage.json` | An Elementor template you import. Covered below. |
+| **Product archive** — `compound-index.zip` | A WordPress plugin that restyles the shop and product-category pages. See **[docs/archive-product-page.md](docs/archive-product-page.md)**. |
 
 Built with **Flexbox Containers** — no legacy Sections or Columns anywhere.
 
@@ -196,6 +206,26 @@ Click any image widget to swap in your own.
 The last FAQ in the right-hand column of the mockup was a joke placeholder. It's
 been replaced with *"Do you offer bulk or wholesale pricing?"*. All FAQ answers
 are sensible starting copy — review them before going live.
+
+---
+
+## The archive plugin
+
+`compound-index.zip` restyles the WooCommerce shop and product-category archives
+into the Compound Index layout — stats header, category chips with live counts,
+and specification-led product cards. Upload it under **Plugins → Add New →
+Upload Plugin**, then configure it at **Products → Compound Index**.
+
+The product grid stays WooCommerce's own main query, so category archives,
+search, sorting and pagination all work natively and new products appear on
+their own. Full write-up, including why your theme has no `archive-product.php`
+to edit, is in **[docs/archive-product-page.md](docs/archive-product-page.md)**.
+
+Rebuild the zip after editing the source:
+
+```bash
+./build/make-plugin-zip.sh
+```
 
 ---
 
