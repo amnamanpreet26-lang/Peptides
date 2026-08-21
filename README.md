@@ -6,10 +6,13 @@ covers the page content only, so it drops into any theme's header/footer.
 
 ```
 templates/peptides-homepage.json    <- import this into Elementor
-compound-index.zip                  <- WooCommerce archive plugin, ready to upload
+avanam-compound-index.zip           <- the Avanam theme with the archive built in
+theme/avanam/                       <- ...just the files that changed in it
+compound-index.zip                  <- the same layout as a standalone plugin
 plugin/compound-index/              <- ...and its source
 docs/slider-revolution-hero.md      <- how to build the hero slider
-docs/archive-product-page.md        <- how to change the shop/category archive
+docs/avanam-theme-changes.md        <- what changed in the theme, and the category fields
+docs/archive-product-page.md        <- WooCommerce archive template hierarchy explained
 assets/images/*.svg                 <- artwork (hero, COA, category, product vials)
 build/                              <- generator scripts (optional, see below)
 ```
@@ -19,7 +22,8 @@ Two separate deliverables live here:
 | | What it does |
 |---|---|
 | **Homepage** — `templates/peptides-homepage.json` | An Elementor template you import. Covered below. |
-| **Product archive** — `compound-index.zip` | A WordPress plugin that restyles the shop and product-category pages. See **[docs/archive-product-page.md](docs/archive-product-page.md)**. |
+| **Product archive (theme)** — `avanam-compound-index.zip` | The Avanam theme with the Compound Index archive built in, and header fields on product categories. See **[docs/avanam-theme-changes.md](docs/avanam-theme-changes.md)**. |
+| **Product archive (plugin)** — `compound-index.zip` | The same layout as a standalone plugin, for any theme. See **[docs/archive-product-page.md](docs/archive-product-page.md)**. Use this *or* the theme version, not both. |
 
 Built with **Flexbox Containers** — no legacy Sections or Columns anywhere.
 
