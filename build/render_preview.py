@@ -164,12 +164,17 @@ def r_icon_box(st):
              else st.get("primary_color", "#000"))
     glyph = icon_svg(st["selected_icon"]["value"], color, size)
     if view == "stacked":
+        radius = (d(st["border_radius"]) if st.get("border_radius")
+                  else ("0" if "square" == st.get("shape") else "50%"))
         glyph = (f'<span style="display:inline-flex;padding:{s(st.get("icon_padding"), "16px")};'
-                 f'background:{st.get("primary_color")};border-radius:50%;">{glyph}</span>')
+                 f'background:{st.get("primary_color")};border-radius:{radius};">{glyph}</span>')
     t_css = typo_css(st, "title_typography_") + f"color:{st.get('title_color')};margin:0;"
     d_css = typo_css(st, "description_typography_") + f"color:{st.get('description_color')};margin:0;"
+    align = st.get("text_align", "left")
+    cross = {"left": "flex-start", "center": "center", "right": "flex-end"}.get(align, "flex-start")
+    cross = "center" if pos == "left" else cross
     return (f'<div style="display:flex;flex-direction:{"row" if pos == "left" else "column"};'
-            f'gap:{s(st.get("icon_space"), "12px")};align-items:center;">'
+            f'gap:{s(st.get("icon_space"), "12px")};align-items:{cross};text-align:{align};"> '
             f'<div style="flex:0 0 auto;line-height:0;">{glyph}</div>'
             f'<div><h6 style="{t_css}">{st.get("title_text", "")}</h6>'
             f'<p style="{d_css}margin-top:{s(st.get("title_bottom_space"), "4px")};">'
