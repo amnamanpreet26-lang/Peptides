@@ -67,29 +67,34 @@ PRODUCTS = [
 
 
 def r_woo_products(st):
+    """Emit the markup Avanam wraps around WooCommerce's loop, so the real
+    product CSS can be checked against it."""
     cols = int(st.get("columns", 5))
+    grid = {4: "grid-ss-col-2 grid-sm-col-3 grid-lg-col-4",
+            5: "grid-ss-col-2 grid-sm-col-3 grid-md-col-4 grid-lg-col-5"}.get(
+        cols, "grid-ss-col-2 grid-sm-col-3 grid-lg-col-4")
     vial = V.data_uri(V.vial("bpc"))
-    cards = []
+    items = []
     for name, price in PRODUCTS[:cols]:
-        cards.append(
-            '<div style="background:#fff;border-radius:14px;overflow:hidden;'
-            f'border:1px solid {LINE}">'
-            '<div style="background:#F6F7F8;aspect-ratio:1/1;display:flex;'
-            'align-items:center;justify-content:center;padding:14px">'
-            f'<img src="{vial}" alt="" style="width:76%;height:auto"></div>'
-            '<div style="padding:14px 16px 16px">'
-            f'<div style="font:400 13px/1.45 Satoshi,Arial,sans-serif;color:{INK};'
-            f'margin-bottom:8px">{name}</div>'
-            '<div style="display:flex;align-items:center;justify-content:space-between">'
-            f'<span style="font:500 14px/1 Satoshi,Arial,sans-serif;color:{INK}">{price}</span>'
-            f'<span style="width:30px;height:30px;border-radius:50%;background:{INK};'
-            'display:inline-flex;align-items:center;justify-content:center">'
-            f'{_svg("credit-card", "#fff", 12)}</span>'
-            "</div></div></div>"
+        items.append(
+            '<li class="product type-product status-publish instock purchasable'
+            ' product-type-simple entry content-bg loop-entry">'
+            '<div class="product-thumbnail">'
+            f'<a href="#"><img src="{vial}" alt=""></a>'
+            '<div class="product-actions"></div>'
+            "</div>"
+            '<div class="product-details content-bg entry-content-wrap">'
+            f'<h2 class="woocommerce-loop-product__title"><a href="#">{name}</a></h2>'
+            '<div class="star-rating">&#9734;&#9734;&#9734;&#9734;&#9734;</div>'
+            f'<span class="price"><span class="woocommerce-Price-amount amount">{price}</span></span>'
+            '<div class="product-action-wrap style-normal">'
+            '<a href="#" class="button product_type_simple add_to_cart_button">Add to cart</a>'
+            "</div></div></li>"
         )
-    grid = (f'<div style="display:grid;grid-template-columns:repeat({cols},minmax(0,1fr));'
-            f'gap:18px">{"".join(cards)}</div>')
-    return R.stub("WooCommerce Products &mdash; pick a category in the widget", grid)
+    ul = (f'<div class="woocommerce columns-{cols}">'
+          f'<ul class="products content-wrap product-archive grid-cols {grid}">'
+          f'{"".join(items)}</ul></div>')
+    return R.stub("WooCommerce Products &mdash; pick a category in the widget", ul)
 
 
 def r_nested_tabs(st, el):
@@ -154,6 +159,8 @@ def render(el):
             fn = R.WIDGETS.get(w)
             body = fn(st) if fn else f"<div>[{w}]</div>"
 
+        wcls = st.get("_css_classes", "")
+        wcls = f' class="{wcls}"' if wcls else ""
         css = "width:100%;"
         if st.get("_element_width") == "auto":
             css = "max-width:fit-content;"
@@ -162,7 +169,7 @@ def render(el):
         if st.get("_padding"):
             css += f"padding:{R.d(st['_padding'])};"
         css += R.box_css(st, "_")
-        return f'<div style="{css}">{body}</div>'
+        return f'<div{wcls} style="{css}">{body}</div>'
 
     st = el.get("settings", {})
     direction = st.get("flex_direction", "column")
@@ -175,6 +182,7 @@ def render(el):
     if st.get("flex_justify_content"):
         flex += f"justify-content:{st['flex_justify_content']};"
 
+    classes = st.get("_css_classes") or st.get("css_classes") or ""
     outer = "position:relative;"
     outer += f"width:{R.s(st['width'])};" if st.get("width") else "width:100%;"
     if st.get("min_height"):
@@ -186,22 +194,36 @@ def render(el):
 
     kids = "".join(render(c) for c in el["elements"])
 
+    cls = f' class="{classes}"' if classes else ""
     if st.get("content_width") == "boxed":
         bw = R.s(st.get("boxed_width"), "1140px")
-        return (f'<div style="{outer}display:flex;">'
+        return (f'<div{cls} style="{outer}display:flex;">'
                 f'<div style="{flex}max-width:{bw};width:100%;margin-inline:auto;">'
                 f"{kids}</div></div>")
-    return f'<div style="{outer}{flex}">{kids}</div>'
+    return f'<div{cls} style="{outer}{flex}">{kids}</div>'
 
 
-HEAD = """<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Peptide landing preview</title><style>
+SHIM = """
 *{box-sizing:border-box}
 body{margin:0;background:#fff;font-family:Satoshi,Inter,'Helvetica Neue',Arial,sans-serif;
  -webkit-font-smoothing:antialiased}
 p{margin:0}
-img{display:block}
-</style>"""
+img{display:block;max-width:100%}
+/* Stand-in for the Avanam base styles the loop sits on. */
+.grid-cols{display:grid;grid-template-columns:minmax(0,1fr);column-gap:2.5rem;row-gap:2.5rem}
+.grid-lg-col-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.grid-lg-col-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+ul.products{list-style:none;margin:0;padding:0}
+ul.products li.product{position:relative;list-style:none}
+.woocommerce-loop-product__title{font-size:18px;font-weight:500;margin:0 0 8px}
+.star-rating{color:#f0a500;font-size:13px;letter-spacing:2px;margin-bottom:6px}
+.price{display:block;font-size:16px;font-weight:500;margin-bottom:12px}
+.product-action-wrap .button{display:inline-block;padding:11px 18px;border:0;border-radius:4px;
+ background:#111;color:#fff;font-size:12px;text-decoration:none}
+"""
+
+HEAD = ('<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+        "<title>Peptide landing preview</title><style>" + SHIM + "</style>")
 
 
 def main():

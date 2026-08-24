@@ -78,6 +78,55 @@ work it out from sales.
 
 ---
 
+## The product card styling
+
+Both product sections carry the custom class **`pl-products`**, and the best
+sellers row also carries **`pl-products--accent`**. The class is set in two
+places so it is hard to lose:
+
+* on the **section container** (Advanced → CSS Classes), so any Products widget
+  you add inside it is styled too — including a new tab
+* on each **Products widget** itself
+
+The CSS is scoped to that class, so it cannot reach your shop archive or
+anything else WooCommerce renders elsewhere. It styles the theme's own loop
+markup — `.product-thumbnail`, `.product-details`, `.product-action-wrap` — so
+the products stay WooCommerce's; only their presentation changes.
+
+What it does, matching the design:
+
+| | |
+|---|---|
+| Card | White, 14px radius, 1px `#E6E8EC` hairline, lifts 4px on hover |
+| Image | Square tile on `#EDEFF1`, image contained and centred, scales gently on hover |
+| Title | Satoshi 13/400 in `#00030E`, on its own line |
+| Price | Satoshi 15/500, sits at the left of the bottom row |
+| Add to cart | Becomes a 34px round `#00030E` button with a cart glyph, at the right of the price row. Turns `#019DA6` on hover. The label stays in the DOM for screen readers, hidden with `font-size: 0` |
+| Star rating | Hidden — the design has none on these cards |
+| `--accent` | No card border or background, rounded image tile, teal button |
+
+### Where the CSS lives
+
+It ships **inside the template**, in an HTML widget at the top of the product
+showcase section, so importing the JSON gives you the finished design with
+nothing else to set up.
+
+If you would rather keep it in a stylesheet, the same CSS is at
+`assets/css/peptide-landing-products.css`. Paste it into **Appearance →
+Customize → Additional CSS** (or enqueue the file), then delete that HTML
+widget. Don't do both — you'd have two copies fighting.
+
+> One thing to know if you move it: the HTML widget sits in the showcase
+> section, so deleting that section also removes the CSS the best-sellers row
+> depends on. Move the CSS to a stylesheet first if you plan to drop the
+> showcase.
+
+The grid columns are left to the theme: the CSS only lays the grid out itself
+when the theme's `grid-cols` class is missing, so Avanam's own responsive
+column classes keep working.
+
+---
+
 ## Colours
 
 Both requested colours are in, and the dark one is deliberately *not* used

@@ -1,0 +1,204 @@
+/* -------------------------------------------------------------------------
+ * Product grids on the peptide landing page.
+ *
+ * Scoped to .pl-products - the custom class on the two product sections - so it
+ * cannot reach the shop archive or anything else WooCommerce renders. It styles
+ * the theme's own loop markup (.product-thumbnail / .product-details /
+ * .product-action-wrap), so the products themselves stay WooCommerce's.
+ *
+ * .pl-products--accent is the best-sellers variant: no card border, teal button.
+ * ---------------------------------------------------------------------- */
+
+.pl-products ul.products {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	column-gap: 18px;
+	row-gap: 28px;
+}
+
+/* Only lay the grid out ourselves if the theme has not already done it. */
+.pl-products ul.products:where(:not(.grid-cols)) {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.pl-products ul.products.grid-cols li.product::before,
+.pl-products ul.products.grid-cols::after {
+	border: 0;
+	content: none;
+}
+
+/* --- the card ---------------------------------------------------------- */
+
+.pl-products ul.products li.product {
+	display: flex;
+	flex-direction: column;
+	width: auto;
+	margin: 0;
+	padding: 0;
+	float: none;
+	background: #FFFFFF;
+	border: 1px solid #E6E8EC;
+	border-radius: 14px;
+	overflow: hidden;
+	transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+
+.pl-products ul.products li.product:hover {
+	transform: translateY(-4px);
+	border-color: #00030E;
+	box-shadow: 0 14px 34px rgba(0, 3, 14, .10);
+}
+
+/* --- image ------------------------------------------------------------- */
+
+.pl-products .product-thumbnail {
+	position: static;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	aspect-ratio: 1 / 1;
+	padding: 20px;
+	background: #EDEFF1;
+	overflow: hidden;
+	transform: none;
+}
+
+.pl-products .product-thumbnail img {
+	width: auto;
+	max-width: 80%;
+	max-height: 100%;
+	margin: 0;
+	object-fit: contain;
+	transition: transform .5s ease;
+}
+
+.pl-products ul.products li.product:hover .product-thumbnail img {
+	transform: scale(1.05);
+}
+
+/* The theme's over-image action icons are not part of this design. */
+.pl-products .product-actions {
+	display: none;
+}
+
+/* --- text: title on its own line, then price left / button right -------- */
+
+.pl-products .product-details {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	margin: 0;
+	padding: 15px 16px 16px;
+}
+
+.pl-products .product-details h2,
+.pl-products .product-details h3,
+.pl-products .woocommerce-loop-product__title {
+	flex: 0 0 100%;
+	margin: 0;
+	padding: 0;
+	font-family: "Satoshi", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+	font-size: 13px;
+	font-weight: 400;
+	line-height: 1.45;
+	letter-spacing: 0;
+	text-transform: none;
+	color: #00030E;
+}
+
+.pl-products .product-details h2 a,
+.pl-products .woocommerce-loop-product__title a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.pl-products .price {
+	flex: 1 1 auto;
+	margin: 0;
+	font-family: "Satoshi", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+	font-size: 15px;
+	font-weight: 500;
+	line-height: 1.2;
+	color: #00030E;
+}
+
+.pl-products .price del { margin-right: 6px; font-weight: 400; opacity: .45; }
+.pl-products .price ins { text-decoration: none; }
+
+/* The design has no star rating in the card. */
+.pl-products .star-rating { display: none; }
+
+/* --- add to cart becomes the round icon button ------------------------- */
+
+.pl-products .product-action-wrap {
+	flex: 0 0 auto;
+	margin: 0 0 0 auto;
+	padding: 0;
+}
+
+.pl-products .product-action-wrap .button,
+.pl-products .add_to_cart_button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: #00030E;
+	color: #FFFFFF;
+	/* Hides the label visually; screen readers still read it. */
+	font-size: 0;
+	line-height: 0;
+	transition: background-color .25s ease, transform .25s ease;
+}
+
+.pl-products .product-action-wrap .button::before,
+.pl-products .add_to_cart_button::before {
+	content: "";
+	width: 15px;
+	height: 15px;
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.5L21 8H6'/%3E%3Ccircle cx='10' cy='20' r='1.3'/%3E%3Ccircle cx='18' cy='20' r='1.3'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.pl-products .product-action-wrap .button:hover,
+.pl-products .add_to_cart_button:hover {
+	background: #019DA6;
+	transform: scale(1.06);
+}
+
+/* WooCommerce's "View cart" link would break the row - keep it out. */
+.pl-products .added_to_cart { display: none; }
+
+/* --- best-sellers variant ---------------------------------------------- */
+
+.pl-products--accent ul.products li.product {
+	border-color: transparent;
+	background: transparent;
+}
+
+.pl-products--accent ul.products li.product:hover {
+	border-color: transparent;
+	box-shadow: none;
+	transform: translateY(-4px);
+}
+
+.pl-products--accent .product-thumbnail { border-radius: 14px; }
+.pl-products--accent .product-details { padding: 16px 2px 0; }
+
+.pl-products--accent .product-action-wrap .button,
+.pl-products--accent .add_to_cart_button { background: #019DA6; }
+
+.pl-products--accent .product-action-wrap .button:hover,
+.pl-products--accent .add_to_cart_button:hover { background: #00030E; }
+
+@media (max-width: 640px) {
+	.pl-products .product-details { padding: 13px 13px 15px; }
+	.pl-products--accent .product-details { padding: 14px 2px 0; }
+}

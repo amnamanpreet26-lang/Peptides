@@ -818,7 +818,7 @@
       "isInner": false
     },
     {
-      "id": "f717716",
+      "id": "6c8349c",
       "elType": "container",
       "settings": {
         "content_width": "boxed",
@@ -860,9 +860,21 @@
           "isLinked": false
         },
         "background_background": "classic",
-        "background_color": "#EFF2F3"
+        "background_color": "#EFF2F3",
+        "_css_classes": "pl-products",
+        "css_classes": "pl-products"
       },
       "elements": [
+        {
+          "id": "a5bfc9e",
+          "elType": "widget",
+          "widgetType": "html",
+          "settings": {
+            "html": "<style>\n/* -------------------------------------------------------------------------\n * Product grids on the peptide landing page.\n *\n * Scoped to .pl-products - the custom class on the two product sections - so it\n * cannot reach the shop archive or anything else WooCommerce renders. It styles\n * the theme's own loop markup (.product-thumbnail / .product-details /\n * .product-action-wrap), so the products themselves stay WooCommerce's.\n *\n * .pl-products--accent is the best-sellers variant: no card border, teal button.\n * ---------------------------------------------------------------------- */\n\n.pl-products ul.products {\n\tmargin: 0;\n\tpadding: 0;\n\tlist-style: none;\n\tcolumn-gap: 18px;\n\trow-gap: 28px;\n}\n\n/* Only lay the grid out ourselves if the theme has not already done it. */\n.pl-products ul.products:where(:not(.grid-cols)) {\n\tdisplay: grid;\n\tgrid-template-columns: repeat(auto-fit, minmax(180px, 1fr));\n}\n\n.pl-products ul.products.grid-cols li.product::before,\n.pl-products ul.products.grid-cols::after {\n\tborder: 0;\n\tcontent: none;\n}\n\n/* --- the card ---------------------------------------------------------- */\n\n.pl-products ul.products li.product {\n\tdisplay: flex;\n\tflex-direction: column;\n\twidth: auto;\n\tmargin: 0;\n\tpadding: 0;\n\tfloat: none;\n\tbackground: #FFFFFF;\n\tborder: 1px solid #E6E8EC;\n\tborder-radius: 14px;\n\toverflow: hidden;\n\ttransition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;\n}\n\n.pl-products ul.products li.product:hover {\n\ttransform: translateY(-4px);\n\tborder-color: #00030E;\n\tbox-shadow: 0 14px 34px rgba(0, 3, 14, .10);\n}\n\n/* --- image ------------------------------------------------------------- */\n\n.pl-products .product-thumbnail {\n\tposition: static;\n\tdisplay: flex;\n\talign-items: center;\n\tjustify-content: center;\n\taspect-ratio: 1 / 1;\n\tpadding: 20px;\n\tbackground: #EDEFF1;\n\toverflow: hidden;\n\ttransform: none;\n}\n\n.pl-products .product-thumbnail img {\n\twidth: auto;\n\tmax-width: 80%;\n\tmax-height: 100%;\n\tmargin: 0;\n\tobject-fit: contain;\n\ttransition: transform .5s ease;\n}\n\n.pl-products ul.products li.product:hover .product-thumbnail img {\n\ttransform: scale(1.05);\n}\n\n/* The theme's over-image action icons are not part of this design. */\n.pl-products .product-actions {\n\tdisplay: none;\n}\n\n/* --- text: title on its own line, then price left / button right -------- */\n\n.pl-products .product-details {\n\tdisplay: flex;\n\tflex-wrap: wrap;\n\talign-items: center;\n\tgap: 10px;\n\tmargin: 0;\n\tpadding: 15px 16px 16px;\n}\n\n.pl-products .product-details h2,\n.pl-products .product-details h3,\n.pl-products .woocommerce-loop-product__title {\n\tflex: 0 0 100%;\n\tmargin: 0;\n\tpadding: 0;\n\tfont-family: \"Satoshi\", -apple-system, BlinkMacSystemFont, Arial, sans-serif;\n\tfont-size: 13px;\n\tfont-weight: 400;\n\tline-height: 1.45;\n\tletter-spacing: 0;\n\ttext-transform: none;\n\tcolor: #00030E;\n}\n\n.pl-products .product-details h2 a,\n.pl-products .woocommerce-loop-product__title a {\n\tcolor: inherit;\n\ttext-decoration: none;\n}\n\n.pl-products .price {\n\tflex: 1 1 auto;\n\tmargin: 0;\n\tfont-family: \"Satoshi\", -apple-system, BlinkMacSystemFont, Arial, sans-serif;\n\tfont-size: 15px;\n\tfont-weight: 500;\n\tline-height: 1.2;\n\tcolor: #00030E;\n}\n\n.pl-products .price del { margin-right: 6px; font-weight: 400; opacity: .45; }\n.pl-products .price ins { text-decoration: none; }\n\n/* The design has no star rating in the card. */\n.pl-products .star-rating { display: none; }\n\n/* --- add to cart becomes the round icon button ------------------------- */\n\n.pl-products .product-action-wrap {\n\tflex: 0 0 auto;\n\tmargin: 0 0 0 auto;\n\tpadding: 0;\n}\n\n.pl-products .product-action-wrap .button,\n.pl-products .add_to_cart_button {\n\tdisplay: inline-flex;\n\talign-items: center;\n\tjustify-content: center;\n\twidth: 34px;\n\theight: 34px;\n\tmin-width: 0;\n\tmargin: 0;\n\tpadding: 0;\n\tborder: 0;\n\tborder-radius: 50%;\n\tbackground: #00030E;\n\tcolor: #FFFFFF;\n\t/* Hides the label visually; screen readers still read it. */\n\tfont-size: 0;\n\tline-height: 0;\n\ttransition: background-color .25s ease, transform .25s ease;\n}\n\n.pl-products .product-action-wrap .button::before,\n.pl-products .add_to_cart_button::before {\n\tcontent: \"\";\n\twidth: 15px;\n\theight: 15px;\n\tbackground: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.5L21 8H6'/%3E%3Ccircle cx='10' cy='20' r='1.3'/%3E%3Ccircle cx='18' cy='20' r='1.3'/%3E%3C/svg%3E\") center / contain no-repeat;\n}\n\n.pl-products .product-action-wrap .button:hover,\n.pl-products .add_to_cart_button:hover {\n\tbackground: #019DA6;\n\ttransform: scale(1.06);\n}\n\n/* WooCommerce's \"View cart\" link would break the row - keep it out. */\n.pl-products .added_to_cart { display: none; }\n\n/* --- best-sellers variant ---------------------------------------------- */\n\n.pl-products--accent ul.products li.product {\n\tborder-color: transparent;\n\tbackground: transparent;\n}\n\n.pl-products--accent ul.products li.product:hover {\n\tborder-color: transparent;\n\tbox-shadow: none;\n\ttransform: translateY(-4px);\n}\n\n.pl-products--accent .product-thumbnail { border-radius: 14px; }\n.pl-products--accent .product-details { padding: 16px 2px 0; }\n\n.pl-products--accent .product-action-wrap .button,\n.pl-products--accent .add_to_cart_button { background: #019DA6; }\n\n.pl-products--accent .product-action-wrap .button:hover,\n.pl-products--accent .add_to_cart_button:hover { background: #00030E; }\n\n@media (max-width: 640px) {\n\t.pl-products .product-details { padding: 13px 13px 15px; }\n\t.pl-products--accent .product-details { padding: 14px 2px 0; }\n}\n</style>"
+          },
+          "elements": [],
+          "isInner": false
+        },
         {
           "id": "1ff1de7",
           "elType": "container",
@@ -1123,7 +1135,7 @@
           "isInner": false
         },
         {
-          "id": "17e6216",
+          "id": "f717716",
           "elType": "widget",
           "widgetType": "nested-tabs",
           "settings": {
@@ -1139,7 +1151,7 @@
                   "value": "",
                   "library": ""
                 },
-                "_id": "a5bfc9e"
+                "_id": "a5771bc"
               },
               {
                 "tab_title": "Repair & Recovery",
@@ -1152,7 +1164,7 @@
                   "value": "",
                   "library": ""
                 },
-                "_id": "a5771bc"
+                "_id": "d67d8ab"
               },
               {
                 "tab_title": "Anti-Aging",
@@ -1165,7 +1177,7 @@
                   "value": "",
                   "library": ""
                 },
-                "_id": "d67d8ab"
+                "_id": "d645920"
               },
               {
                 "tab_title": "Hydration",
@@ -1178,7 +1190,7 @@
                   "value": "",
                   "library": ""
                 },
-                "_id": "d645920"
+                "_id": "3416a75"
               },
               {
                 "tab_title": "Brightening",
@@ -1191,7 +1203,7 @@
                   "value": "",
                   "library": ""
                 },
-                "_id": "3416a75"
+                "_id": "a1d0c6e"
               },
               {
                 "tab_title": "Barrier Support",
@@ -1204,7 +1216,7 @@
                   "value": "",
                   "library": ""
                 },
-                "_id": "a1d0c6e"
+                "_id": "17e6216"
               }
             ],
             "tabs_justify_horizontal": "start",
@@ -1314,7 +1326,8 @@
                     "rows": "1",
                     "paginate": "",
                     "allow_order": "",
-                    "show_result_count": ""
+                    "show_result_count": "",
+                    "_css_classes": "pl-products"
                   },
                   "elements": [],
                   "isInner": false
@@ -1347,7 +1360,8 @@
                     "rows": "1",
                     "paginate": "",
                     "allow_order": "",
-                    "show_result_count": ""
+                    "show_result_count": "",
+                    "_css_classes": "pl-products"
                   },
                   "elements": [],
                   "isInner": false
@@ -1380,7 +1394,8 @@
                     "rows": "1",
                     "paginate": "",
                     "allow_order": "",
-                    "show_result_count": ""
+                    "show_result_count": "",
+                    "_css_classes": "pl-products"
                   },
                   "elements": [],
                   "isInner": false
@@ -1413,7 +1428,8 @@
                     "rows": "1",
                     "paginate": "",
                     "allow_order": "",
-                    "show_result_count": ""
+                    "show_result_count": "",
+                    "_css_classes": "pl-products"
                   },
                   "elements": [],
                   "isInner": false
@@ -1446,7 +1462,8 @@
                     "rows": "1",
                     "paginate": "",
                     "allow_order": "",
-                    "show_result_count": ""
+                    "show_result_count": "",
+                    "_css_classes": "pl-products"
                   },
                   "elements": [],
                   "isInner": false
@@ -1479,7 +1496,8 @@
                     "rows": "1",
                     "paginate": "",
                     "allow_order": "",
-                    "show_result_count": ""
+                    "show_result_count": "",
+                    "_css_classes": "pl-products"
                   },
                   "elements": [],
                   "isInner": false
@@ -1494,7 +1512,7 @@
       "isInner": false
     },
     {
-      "id": "fc490ca",
+      "id": "3295c76",
       "elType": "container",
       "settings": {
         "content_width": "boxed",
@@ -1557,7 +1575,7 @@
       },
       "elements": [
         {
-          "id": "ea5d2f1",
+          "id": "fc490ca",
           "elType": "container",
           "settings": {
             "content_width": "full",
@@ -1584,7 +1602,7 @@
           },
           "elements": [
             {
-              "id": "7f39f83",
+              "id": "44f683a",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -1622,7 +1640,7 @@
               },
               "elements": [
                 {
-                  "id": "66f041e",
+                  "id": "093f65e",
                   "elType": "widget",
                   "widgetType": "heading",
                   "settings": {
@@ -1662,7 +1680,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "093f65e",
+                  "id": "072b030",
                   "elType": "widget",
                   "widgetType": "heading",
                   "settings": {
@@ -1712,7 +1730,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "072b030",
+                  "id": "7f39f83",
                   "elType": "widget",
                   "widgetType": "text-editor",
                   "settings": {
@@ -1745,7 +1763,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "a684ece",
+                  "id": "b53b3a3",
                   "elType": "container",
                   "settings": {
                     "content_width": "full",
@@ -1779,7 +1797,7 @@
                   },
                   "elements": [
                     {
-                      "id": "67c6a1e",
+                      "id": "642e92e",
                       "elType": "container",
                       "settings": {
                         "content_width": "full",
@@ -1802,7 +1820,7 @@
                       },
                       "elements": [
                         {
-                          "id": "6c8349c",
+                          "id": "d9d4f49",
                           "elType": "widget",
                           "widgetType": "heading",
                           "settings": {
@@ -1841,7 +1859,7 @@
                           "isInner": false
                         },
                         {
-                          "id": "d9d4f49",
+                          "id": "67c6a1e",
                           "elType": "widget",
                           "widgetType": "heading",
                           "settings": {
@@ -1876,7 +1894,7 @@
                       "isInner": false
                     },
                     {
-                      "id": "c0c7c76",
+                      "id": "2838023",
                       "elType": "container",
                       "settings": {
                         "content_width": "full",
@@ -1899,7 +1917,7 @@
                       },
                       "elements": [
                         {
-                          "id": "642e92e",
+                          "id": "f457c54",
                           "elType": "widget",
                           "widgetType": "heading",
                           "settings": {
@@ -1938,7 +1956,7 @@
                           "isInner": false
                         },
                         {
-                          "id": "f457c54",
+                          "id": "c0c7c76",
                           "elType": "widget",
                           "widgetType": "heading",
                           "settings": {
@@ -1973,7 +1991,7 @@
                       "isInner": false
                     },
                     {
-                      "id": "d82c8d1",
+                      "id": "a684ece",
                       "elType": "container",
                       "settings": {
                         "content_width": "full",
@@ -1996,7 +2014,7 @@
                       },
                       "elements": [
                         {
-                          "id": "2838023",
+                          "id": "9a11581",
                           "elType": "widget",
                           "widgetType": "heading",
                           "settings": {
@@ -2035,7 +2053,7 @@
                           "isInner": false
                         },
                         {
-                          "id": "9a11581",
+                          "id": "d82c8d1",
                           "elType": "widget",
                           "widgetType": "heading",
                           "settings": {
@@ -2073,7 +2091,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "72b32a1",
+                  "id": "66f041e",
                   "elType": "container",
                   "settings": {
                     "content_width": "full",
@@ -2099,7 +2117,7 @@
                   },
                   "elements": [
                     {
-                      "id": "b53b3a3",
+                      "id": "9f61408",
                       "elType": "widget",
                       "widgetType": "button",
                       "settings": {
@@ -2162,7 +2180,7 @@
                       "isInner": false
                     },
                     {
-                      "id": "9f61408",
+                      "id": "72b32a1",
                       "elType": "widget",
                       "widgetType": "button",
                       "settings": {
@@ -2241,7 +2259,7 @@
               "isInner": false
             },
             {
-              "id": "03afdbd",
+              "id": "ea5d2f1",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -2279,7 +2297,7 @@
               },
               "elements": [
                 {
-                  "id": "44f683a",
+                  "id": "03afdbd",
                   "elType": "widget",
                   "widgetType": "image",
                   "settings": {
@@ -2313,7 +2331,7 @@
       "isInner": false
     },
     {
-      "id": "7cbbc40",
+      "id": "e2c420d",
       "elType": "container",
       "settings": {
         "content_width": "boxed",
@@ -2355,11 +2373,13 @@
           "isLinked": false
         },
         "background_background": "classic",
-        "background_color": "#FFFFFF"
+        "background_color": "#FFFFFF",
+        "_css_classes": "pl-products pl-products--accent",
+        "css_classes": "pl-products pl-products--accent"
       },
       "elements": [
         {
-          "id": "a3f390d",
+          "id": "14bfa6b",
           "elType": "container",
           "settings": {
             "content_width": "full",
@@ -2382,7 +2402,7 @@
           },
           "elements": [
             {
-              "id": "3295c76",
+              "id": "735b90b",
               "elType": "widget",
               "widgetType": "heading",
               "settings": {
@@ -2422,7 +2442,7 @@
               "isInner": false
             },
             {
-              "id": "735b90b",
+              "id": "a3f390d",
               "elType": "widget",
               "widgetType": "heading",
               "settings": {
@@ -2475,7 +2495,7 @@
           "isInner": false
         },
         {
-          "id": "14bfa6b",
+          "id": "7cbbc40",
           "elType": "widget",
           "widgetType": "woocommerce-products",
           "settings": {
@@ -2483,7 +2503,8 @@
             "rows": "1",
             "paginate": "",
             "allow_order": "",
-            "show_result_count": ""
+            "show_result_count": "",
+            "_css_classes": "pl-products pl-products--accent"
           },
           "elements": [],
           "isInner": false
@@ -2492,7 +2513,7 @@
       "isInner": false
     },
     {
-      "id": "fe9fc28",
+      "id": "68d30a9",
       "elType": "container",
       "settings": {
         "content_width": "boxed",
@@ -2538,7 +2559,7 @@
       },
       "elements": [
         {
-          "id": "43ec517",
+          "id": "9778d5d",
           "elType": "container",
           "settings": {
             "content_width": "full",
@@ -2561,7 +2582,7 @@
           },
           "elements": [
             {
-              "id": "d1fe173",
+              "id": "f033ab3",
               "elType": "widget",
               "widgetType": "heading",
               "settings": {
@@ -2601,7 +2622,7 @@
               "isInner": false
             },
             {
-              "id": "f033ab3",
+              "id": "43ec517",
               "elType": "widget",
               "widgetType": "heading",
               "settings": {
@@ -2654,7 +2675,7 @@
           "isInner": false
         },
         {
-          "id": "9778d5d",
+          "id": "fe9fc28",
           "elType": "container",
           "settings": {
             "content_width": "full",
@@ -2681,7 +2702,7 @@
           },
           "elements": [
             {
-              "id": "32bb90e",
+              "id": "d2ddea1",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -2719,7 +2740,7 @@
               },
               "elements": [
                 {
-                  "id": "e2c420d",
+                  "id": "32bb90e",
                   "elType": "widget",
                   "widgetType": "icon-box",
                   "settings": {
@@ -2806,7 +2827,7 @@
               "isInner": false
             },
             {
-              "id": "ad61ab1",
+              "id": "d09bf41",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -2844,7 +2865,7 @@
               },
               "elements": [
                 {
-                  "id": "d2ddea1",
+                  "id": "ad61ab1",
                   "elType": "widget",
                   "widgetType": "icon-box",
                   "settings": {
@@ -2931,7 +2952,7 @@
               "isInner": false
             },
             {
-              "id": "fbd7939",
+              "id": "28dd2c7",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -2969,7 +2990,7 @@
               },
               "elements": [
                 {
-                  "id": "d09bf41",
+                  "id": "fbd7939",
                   "elType": "widget",
                   "widgetType": "icon-box",
                   "settings": {
@@ -3056,7 +3077,7 @@
               "isInner": false
             },
             {
-              "id": "35f4a8d",
+              "id": "d1fe173",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -3094,7 +3115,7 @@
               },
               "elements": [
                 {
-                  "id": "28dd2c7",
+                  "id": "35f4a8d",
                   "elType": "widget",
                   "widgetType": "icon-box",
                   "settings": {
@@ -3187,7 +3208,7 @@
       "isInner": false
     },
     {
-      "id": "a97da62",
+      "id": "a3c65c2",
       "elType": "container",
       "settings": {
         "content_width": "boxed",
@@ -3233,7 +3254,7 @@
       },
       "elements": [
         {
-          "id": "f0935e4",
+          "id": "a97da62",
           "elType": "container",
           "settings": {
             "content_width": "full",
@@ -3260,7 +3281,7 @@
           },
           "elements": [
             {
-              "id": "2a38a4a",
+              "id": "7647966",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -3298,7 +3319,7 @@
               },
               "elements": [
                 {
-                  "id": "68d30a9",
+                  "id": "3ef8154",
                   "elType": "widget",
                   "widgetType": "heading",
                   "settings": {
@@ -3338,7 +3359,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "3ef8154",
+                  "id": "93db85e",
                   "elType": "widget",
                   "widgetType": "heading",
                   "settings": {
@@ -3388,7 +3409,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "93db85e",
+                  "id": "c7e1249",
                   "elType": "widget",
                   "widgetType": "text-editor",
                   "settings": {
@@ -3421,7 +3442,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "c7e1249",
+                  "id": "2a38a4a",
                   "elType": "widget",
                   "widgetType": "button",
                   "settings": {
@@ -3497,7 +3518,7 @@
               "isInner": false
             },
             {
-              "id": "65b9eea",
+              "id": "f0935e4",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -3535,7 +3556,7 @@
               },
               "elements": [
                 {
-                  "id": "c9e1074",
+                  "id": "65b9eea",
                   "elType": "widget",
                   "widgetType": "nested-accordion",
                   "settings": {
@@ -3543,27 +3564,27 @@
                       {
                         "item_title": "Is every batch tested before it ships?",
                         "element_css_id": "",
-                        "_id": "7647966"
+                        "_id": "8613985"
                       },
                       {
                         "item_title": "Where do you ship?",
                         "element_css_id": "",
-                        "_id": "8613985"
+                        "_id": "54229ab"
                       },
                       {
                         "item_title": "Do you accept returns?",
                         "element_css_id": "",
-                        "_id": "54229ab"
+                        "_id": "92cc227"
                       },
                       {
                         "item_title": "Who can purchase your products?",
                         "element_css_id": "",
-                        "_id": "92cc227"
+                        "_id": "98dce83"
                       },
                       {
                         "item_title": "What payment methods do you accept?",
                         "element_css_id": "",
-                        "_id": "98dce83"
+                        "_id": "f4b9ec3"
                       }
                     ],
                     "title_tag": "div",
@@ -3656,7 +3677,7 @@
                   },
                   "elements": [
                     {
-                      "id": "812b4ba",
+                      "id": "26657d5",
                       "elType": "container",
                       "settings": {
                         "content_width": "full",
@@ -3672,7 +3693,7 @@
                       },
                       "elements": [
                         {
-                          "id": "f4b9ec3",
+                          "id": "812b4ba",
                           "elType": "widget",
                           "widgetType": "text-editor",
                           "settings": {
@@ -3700,7 +3721,7 @@
                       "isInner": false
                     },
                     {
-                      "id": "e2ef524",
+                      "id": "ed3d2c2",
                       "elType": "container",
                       "settings": {
                         "content_width": "full",
@@ -3716,7 +3737,7 @@
                       },
                       "elements": [
                         {
-                          "id": "26657d5",
+                          "id": "e2ef524",
                           "elType": "widget",
                           "widgetType": "text-editor",
                           "settings": {
@@ -3744,7 +3765,7 @@
                       "isInner": false
                     },
                     {
-                      "id": "ac627ab",
+                      "id": "f899139",
                       "elType": "container",
                       "settings": {
                         "content_width": "full",
@@ -3760,7 +3781,7 @@
                       },
                       "elements": [
                         {
-                          "id": "ed3d2c2",
+                          "id": "ac627ab",
                           "elType": "widget",
                           "widgetType": "text-editor",
                           "settings": {
@@ -3788,7 +3809,7 @@
                       "isInner": false
                     },
                     {
-                      "id": "38b3eff",
+                      "id": "ec89566",
                       "elType": "container",
                       "settings": {
                         "content_width": "full",
@@ -3804,7 +3825,7 @@
                       },
                       "elements": [
                         {
-                          "id": "f899139",
+                          "id": "38b3eff",
                           "elType": "widget",
                           "widgetType": "text-editor",
                           "settings": {
@@ -3832,7 +3853,7 @@
                       "isInner": false
                     },
                     {
-                      "id": "6974ce5",
+                      "id": "c9e1074",
                       "elType": "container",
                       "settings": {
                         "content_width": "full",
@@ -3848,7 +3869,7 @@
                       },
                       "elements": [
                         {
-                          "id": "ec89566",
+                          "id": "6974ce5",
                           "elType": "widget",
                           "widgetType": "text-editor",
                           "settings": {
@@ -3888,7 +3909,7 @@
       "isInner": false
     },
     {
-      "id": "1385974",
+      "id": "0f28b5d",
       "elType": "container",
       "settings": {
         "content_width": "boxed",
@@ -3934,7 +3955,7 @@
       },
       "elements": [
         {
-          "id": "02522a2",
+          "id": "7f1de29",
           "elType": "container",
           "settings": {
             "content_width": "full",
@@ -3961,7 +3982,7 @@
           },
           "elements": [
             {
-              "id": "2b44928",
+              "id": "c45147d",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -3999,7 +4020,7 @@
               },
               "elements": [
                 {
-                  "id": "73278a4",
+                  "id": "5fd0b37",
                   "elType": "widget",
                   "widgetType": "heading",
                   "settings": {
@@ -4039,7 +4060,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "5fd0b37",
+                  "id": "2b44928",
                   "elType": "widget",
                   "widgetType": "text-editor",
                   "settings": {
@@ -4072,7 +4093,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "7f6ffaa",
+                  "id": "73278a4",
                   "elType": "widget",
                   "widgetType": "social-icons",
                   "settings": {
@@ -4087,7 +4108,7 @@
                           "is_external": "on",
                           "nofollow": ""
                         },
-                        "_id": "a3c65c2"
+                        "_id": "2723d09"
                       },
                       {
                         "social_icon": {
@@ -4099,7 +4120,7 @@
                           "is_external": "on",
                           "nofollow": ""
                         },
-                        "_id": "2723d09"
+                        "_id": "5f93f98"
                       },
                       {
                         "social_icon": {
@@ -4111,7 +4132,7 @@
                           "is_external": "on",
                           "nofollow": ""
                         },
-                        "_id": "5f93f98"
+                        "_id": "698d51a"
                       },
                       {
                         "social_icon": {
@@ -4123,7 +4144,7 @@
                           "is_external": "on",
                           "nofollow": ""
                         },
-                        "_id": "698d51a"
+                        "_id": "7f6ffaa"
                       }
                     ],
                     "shape": "circle",
@@ -4165,7 +4186,7 @@
               "isInner": false
             },
             {
-              "id": "a0a080f",
+              "id": "202cb96",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -4188,7 +4209,7 @@
               },
               "elements": [
                 {
-                  "id": "4c56ff4",
+                  "id": "a0a080f",
                   "elType": "widget",
                   "widgetType": "heading",
                   "settings": {
@@ -4228,7 +4249,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "da4fb5c",
+                  "id": "4c56ff4",
                   "elType": "widget",
                   "widgetType": "icon-list",
                   "settings": {
@@ -4244,7 +4265,7 @@
                           "value": "",
                           "library": ""
                         },
-                        "_id": "c45147d"
+                        "_id": "eb160de"
                       },
                       {
                         "text": "Fat Loss",
@@ -4257,7 +4278,7 @@
                           "value": "",
                           "library": ""
                         },
-                        "_id": "eb160de"
+                        "_id": "5ef0599"
                       },
                       {
                         "text": "Performance",
@@ -4270,7 +4291,7 @@
                           "value": "",
                           "library": ""
                         },
-                        "_id": "5ef0599"
+                        "_id": "07e1cd7"
                       },
                       {
                         "text": "Cognitive",
@@ -4283,7 +4304,7 @@
                           "value": "",
                           "library": ""
                         },
-                        "_id": "07e1cd7"
+                        "_id": "da4fb5c"
                       }
                     ],
                     "view": "traditional",
@@ -4338,7 +4359,7 @@
               "isInner": false
             },
             {
-              "id": "d1f491a",
+              "id": "9b86192",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -4361,7 +4382,7 @@
               },
               "elements": [
                 {
-                  "id": "76dc611",
+                  "id": "d1f491a",
                   "elType": "widget",
                   "widgetType": "heading",
                   "settings": {
@@ -4401,7 +4422,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "ec5decc",
+                  "id": "76dc611",
                   "elType": "widget",
                   "widgetType": "icon-list",
                   "settings": {
@@ -4417,7 +4438,7 @@
                           "value": "",
                           "library": ""
                         },
-                        "_id": "202cb96"
+                        "_id": "c8ffe9a"
                       },
                       {
                         "text": "Lab Certificates",
@@ -4430,7 +4451,7 @@
                           "value": "",
                           "library": ""
                         },
-                        "_id": "c8ffe9a"
+                        "_id": "3def184"
                       },
                       {
                         "text": "Shipping",
@@ -4443,7 +4464,7 @@
                           "value": "",
                           "library": ""
                         },
-                        "_id": "3def184"
+                        "_id": "069059b"
                       },
                       {
                         "text": "Refunds",
@@ -4456,7 +4477,7 @@
                           "value": "",
                           "library": ""
                         },
-                        "_id": "069059b"
+                        "_id": "ec5decc"
                       }
                     ],
                     "view": "traditional",
@@ -4511,7 +4532,7 @@
               "isInner": false
             },
             {
-              "id": "9fc3d71",
+              "id": "02522a2",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -4549,7 +4570,7 @@
               },
               "elements": [
                 {
-                  "id": "9b86192",
+                  "id": "1afa34a",
                   "elType": "widget",
                   "widgetType": "heading",
                   "settings": {
@@ -4589,7 +4610,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "1afa34a",
+                  "id": "65ded53",
                   "elType": "widget",
                   "widgetType": "text-editor",
                   "settings": {
@@ -4614,7 +4635,7 @@
                   "isInner": false
                 },
                 {
-                  "id": "65ded53",
+                  "id": "9fc3d71",
                   "elType": "widget",
                   "widgetType": "html",
                   "settings": {
@@ -4630,7 +4651,7 @@
           "isInner": false
         },
         {
-          "id": "e00da03",
+          "id": "1385974",
           "elType": "container",
           "settings": {
             "content_width": "full",
@@ -4675,7 +4696,7 @@
           },
           "elements": [
             {
-              "id": "42a0e18",
+              "id": "3988c7f",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -4708,7 +4729,7 @@
               },
               "elements": [
                 {
-                  "id": "7f1de29",
+                  "id": "42a0e18",
                   "elType": "widget",
                   "widgetType": "text-editor",
                   "settings": {
@@ -4736,7 +4757,7 @@
               "isInner": false
             },
             {
-              "id": "013d407",
+              "id": "e00da03",
               "elType": "container",
               "settings": {
                 "content_width": "full",
@@ -4769,7 +4790,7 @@
               },
               "elements": [
                 {
-                  "id": "3988c7f",
+                  "id": "013d407",
                   "elType": "widget",
                   "widgetType": "text-editor",
                   "settings": {
